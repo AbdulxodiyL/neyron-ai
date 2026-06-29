@@ -1,0 +1,33 @@
+# Environment variables (NEVER commit!)
+.env
+.env.local
+.env.production
+.env.*
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Prisma generated (regenerated on deploy)
+node_modules/.prisma/
+
+# Uploads (user files)
+bialogiya_beakent/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

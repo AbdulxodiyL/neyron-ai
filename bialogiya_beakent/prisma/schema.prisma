@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  teacher
+  student
+}
+
+enum Language {
+  uz
+  ru
+  en
+}
+
+model User {
+  id               String    @id @default(cuid())
+  name             String
+  email            String?   @unique
+  username         String    @unique
+  passwordHash     String
+  role             Role      @default(student)
+  avatar           String?
+  language         Language  @default(uz)
+  xp               Int       @default(0)
+  coins            Int       @default(0)
+  level            Int       @default(1)
+  streakCurrent    Int       @default(0)
+  streakLongest    Int       @default(0)
+  streakLastDate   DateTime?
+  achievements     Json      @default("[]")
+  refreshTokenHash String?
+  isActive         Boolean   @default(true)
+  lastLogin        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  groupId   String?
+  group     Group?  @relation("StudentGroup", fields: [groupId], references: [id])
+  teacherId String?
+  teacher   User?   @relation("StudentTeacher", fields: [teacherId], references: [id])
+  students  User[]  @relation("StudentTeacher")
+
+  taughtGroups  Group[]        @relation("TeacherGroup")
+  lessons       Lesson[]
+  homework      Homework[]
+  tests         Test[]
+  submissions   Submission[]
+  results       Result[]
+  notifications Notification[]
+  aiChats       AIChat[]
+  resources     Resource[]
+  attendances   Attendance[]
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  subject     String   @default("biology")
+  icon        String?
+  color       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teacherId String
+  teacher   User   @relation("TeacherGroup", fields: [teacherId], references: [id])
+
+  students    User[]       @relation("StudentGroup")
+  lessons     Lesson[]
+  homework    Homework[]
+  tests       Test[]
+  attendances Attendance[]
+}
+
+model Lesson {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?  @db.Text
+  subject   String   @default("biology")
+  order     Int      @default(0)
+  views     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  groupId   String
+  group     Group  @relation(fields: [groupId], references: [id])
+  teacherId String
+  teacher   User   @relation(fields: [teacherId], references: [id])
+
+  attachments Json @default("[]")
+  aiContent   Json @default("{\"status\":\"pending\"}")
+
+  homework Homework[]
+  aiChats  AIChat[]
+}
+
+model Homework {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  dueDate     DateTime
+  maxScore    Int      @default(100)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  groupId   String
+  group     Group  @relation(fields: [groupId], references: [id])
+  teacherId String
+  teacher   User   @relation(fields: [teacherId], references: [id])
+  lessonId  String?
+  lesson    Lesson? @relation(fields: [lessonId], references: [id])
+
+  attachments Json         @default("[]")
+  submissions Submission[]
+}
+
+model Submission {
+  id          String   @id @default(cuid())
+  answerText  String?  @db.Text
+  filePaths   Json     @default("[]")
+  content     String?  @db.Text
+  isLate      Boolean  @default(false)
+  status      String   @default("submitted")
+  finalScore  Int?
+  aiGrade     Json?
+  teacherGrade Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  homeworkId String
+  homework   Homework @relation(fields: [homeworkId], references: [id])
+  studentId  String
+  student    User     @relation(fields: [studentId], references: [id])
+
+  @@unique([homeworkId, studentId])
+}
+
+model Test {
+  id             String    @id @default(cuid())
+  title          String
+  type           String    @default("topic")
+  timeLimit      Int       @default(30)
+  passingScore   Int       @default(60)
+  totalPoints    Int       @default(0)
+  availableFrom  DateTime?
+  availableUntil DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  groupId   String
+  group     Group  @relation(fields: [groupId], references: [id])
+  teacherId String
+  teacher   User   @relation(fields: [teacherId], references: [id])
+  lessonId  String?
+
+  questions Question[]
+  results   Result[]
+}
+
+model Question {
+  id          String  @id @default(cuid())
+  text        String  @db.Text
+  type        String  @default("mcq")
+  options     Json    @default("[]")
+  difficulty  String  @default("medium")
+  points      Int     @default(1)
+  explanation String? @db.Text
+
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+}
+
+model Result {
+  id          String   @id @default(cuid())
+  answers     Json     @default("[]")
+  score       Int      @default(0)
+  percentage  Int      @default(0)
+  passed      Boolean  @default(false)
+  timeTaken   Int?
+  aiAnalysis  Json?
+  completedAt DateTime @default(now())
+
+  testId    String
+  test      Test   @relation(fields: [testId], references: [id])
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  records   Json     @default("[]")
+  createdAt DateTime @default(now())
+
+  groupId   String
+  group     Group  @relation(fields: [groupId], references: [id])
+  teacherId String
+  teacher   User   @relation(fields: [teacherId], references: [id])
+
+  @@unique([groupId, date])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  type      String    @default("info")
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model AIChat {
+  id        String   @id @default(cuid())
+  messages  Json     @default("[]")
+  style     String   @default("normal")
+  language  String   @default("uz")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lessonId  String
+  lesson    Lesson @relation(fields: [lessonId], references: [id])
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+
+  @@unique([lessonId, studentId])
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  filePath    String
+  type        String   @default("other")
+  downloads   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  groupId   String?
+  teacherId String
+  teacher   User   @relation(fields: [teacherId], references: [id])
+}
