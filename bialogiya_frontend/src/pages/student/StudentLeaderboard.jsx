@@ -8,12 +8,11 @@ import { getLevelProgress } from '../../utils/format';
 export default function StudentLeaderboard() {
   const { user } = useAuthStore();
   const { data } = useQuery({
-    queryKey: ['group-analytics', user?.groupId],
-    queryFn: () => api.get(`/analytics/group/${user?.groupId}`).then(r => r.data.data),
-    enabled: !!user?.groupId,
+    queryKey: ['leaderboard'],
+    queryFn: () => api.get('/analytics/leaderboard').then(r => r.data.data),
   });
 
-  const leaderboard = data?.leaderboard || [];
+  const leaderboard = data || [];
   const medals = ['🥇', '🥈', '🥉'];
 
   return (
