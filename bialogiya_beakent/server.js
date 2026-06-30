@@ -13,6 +13,9 @@ const app = express();
 // Connect to PostgreSQL (Neon)
 connectDB();
 
+// Trust proxy (Render sits behind a reverse proxy)
+app.set('trust proxy', 1);
+
 // Security & utilities
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(morgan('dev'));
@@ -27,8 +30,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Rate limiters
-const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200, message: 'Too many requests' });
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many login attempts' });
+const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500, message: 'Too many requests' });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: 'Too many login attempts' });
 
 app.use('/api', generalLimiter);
 app.use('/api/auth/login', authLimiter);
