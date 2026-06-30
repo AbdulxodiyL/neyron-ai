@@ -7,7 +7,7 @@ import { formatDate, getScoreBg } from '../../utils/format';
 export default function StudentResults() {
   const { data: results, isLoading } = useQuery({
     queryKey: ['my-results'],
-    queryFn: () => api.get('/tests/my-results').then(r => r.data.data),
+    queryFn: () => api.get('/tests/results').then(r => r.data.data),
   });
 
   return (

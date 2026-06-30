@@ -10,7 +10,7 @@ const TYPE_COLORS = { topic: 'bg-blue-100 text-blue-700', weekly: 'bg-green-100 
 
 export default function ManageTests() {
   const qc = useQueryClient();
-  const { data: tests, isLoading } = useQuery({ queryKey: ['my-tests'], queryFn: () => api.get('/tests/my').then(r => r.data.data) });
+  const { data: tests, isLoading } = useQuery({ queryKey: ['my-tests'], queryFn: () => api.get('/tests').then(r => r.data.data) });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/tests/${id}`),

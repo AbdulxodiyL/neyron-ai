@@ -8,7 +8,7 @@ import { formatDate } from '../../utils/format';
 
 export default function ManageLessons() {
   const qc = useQueryClient();
-  const { data: lessons, isLoading } = useQuery({ queryKey: ['my-lessons'], queryFn: () => api.get('/lessons/my').then(r => r.data.data) });
+  const { data: lessons, isLoading } = useQuery({ queryKey: ['my-lessons'], queryFn: () => api.get('/lessons').then(r => r.data.data) });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/lessons/${id}`),

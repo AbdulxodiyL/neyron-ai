@@ -10,7 +10,7 @@ export default function StudentLessons() {
   const { user } = useAuthStore();
   const { data: lessons, isLoading } = useQuery({
     queryKey: ['lessons', user?.groupId],
-    queryFn: () => api.get(`/lessons/group/${user?.groupId}`).then(r => r.data.data),
+    queryFn: () => api.get('/lessons').then(r => r.data.data),
     enabled: !!user?.groupId,
   });
 

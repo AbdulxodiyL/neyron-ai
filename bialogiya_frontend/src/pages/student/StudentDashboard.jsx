@@ -52,8 +52,7 @@ export default function StudentDashboard() {
 
   const { data: testsData } = useQuery({
     queryKey: ['student-tests'],
-    queryFn: () => api.get(`/tests/group/${user?.groupId}`).then(r => r.data.data),
-    enabled: !!user?.groupId,
+    queryFn: () => api.get('/tests').then(r => r.data.data),
   });
 
   const { level, progress } = getLevelProgress(user?.xp || 0);

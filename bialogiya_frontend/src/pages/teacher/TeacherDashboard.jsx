@@ -10,8 +10,8 @@ export default function TeacherDashboard() {
   const { user } = useAuthStore();
 
   const { data: groups } = useQuery({ queryKey: ['my-groups'], queryFn: () => api.get('/groups').then(r => r.data.data) });
-  const { data: lessons } = useQuery({ queryKey: ['my-lessons'], queryFn: () => api.get('/lessons/my').then(r => r.data.data) });
-  const { data: tests } = useQuery({ queryKey: ['my-tests'], queryFn: () => api.get('/tests/my').then(r => r.data.data) });
+  const { data: lessons } = useQuery({ queryKey: ['my-lessons'], queryFn: () => api.get('/lessons').then(r => r.data.data) });
+  const { data: tests } = useQuery({ queryKey: ['my-tests'], queryFn: () => api.get('/tests').then(r => r.data.data) });
   const { data: homework } = useQuery({ queryKey: ['my-homework'], queryFn: () => api.get('/homework/my').then(r => r.data.data) });
 
   const totalStudents = groups?.reduce((sum, g) => sum + (g.students?.length || 0), 0) || 0;

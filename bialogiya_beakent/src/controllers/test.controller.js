@@ -118,6 +118,17 @@ const getTestResults = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const getMyResults = async (req, res, next) => {
+  try {
+    const results = await prisma.result.findMany({
+      where: { studentId: req.user.userId },
+      orderBy: { completedAt: 'desc' },
+      include: { test: { select: { id: true, title: true, type: true, totalPoints: true, passingScore: true } } },
+    });
+    return success(res, results);
+  } catch (err) { next(err); }
+};
+
 const deleteTest = async (req, res, next) => {
   try {
     const test = await prisma.test.findFirst({ where: { id: req.params.id, teacherId: req.user.userId } });
@@ -128,4 +139,4 @@ const deleteTest = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { createTest, getTests, getTestById, submitTest, getTestResults, deleteTest };
+module.exports = { createTest, getTests, getTestById, submitTest, getTestResults, getMyResults, deleteTest };

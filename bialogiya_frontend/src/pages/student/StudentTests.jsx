@@ -9,13 +9,12 @@ export default function StudentTests() {
   const { user } = useAuthStore();
   const { data: tests, isLoading } = useQuery({
     queryKey: ['tests', user?.groupId],
-    queryFn: () => api.get(`/tests/group/${user?.groupId}`).then(r => r.data.data),
-    enabled: !!user?.groupId,
+    queryFn: () => api.get('/tests').then(r => r.data.data),
   });
 
   const { data: results } = useQuery({
     queryKey: ['my-results'],
-    queryFn: () => api.get('/tests/my-results').then(r => r.data.data),
+    queryFn: () => api.get('/tests/results').then(r => r.data.data),
   });
 
   const completedIds = new Set(results?.map(r => String(r.testId?._id || r.testId)));
