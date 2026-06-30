@@ -89,15 +89,15 @@ export default function StudentDashboard() {
           <div className="text-white/80 text-sm font-medium">{getGreeting()},</div>
           <h1 className="text-2xl font-black mt-0.5">{user?.name} 👋</h1>
           <p className="text-white/70 text-sm mt-1">{motivation}</p>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="flex items-center gap-1.5 bg-white/20 rounded-full px-3 py-1 text-sm">
-              <Flame size={14} /> <span>{user?.streak?.current || 0} streak</span>
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            <div className="flex items-center gap-1.5 bg-white/20 rounded-full px-3 py-1 text-xs sm:text-sm">
+              <Flame size={13} /> <span>{user?.streak?.current || 0} streak</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-white/20 rounded-full px-3 py-1 text-sm">
-              <Zap size={14} /> <span>{user?.xp || 0} XP</span>
+            <div className="flex items-center gap-1.5 bg-white/20 rounded-full px-3 py-1 text-xs sm:text-sm">
+              <Zap size={13} /> <span>{user?.xp || 0} XP</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-white/20 rounded-full px-3 py-1 text-sm">
-              <Star size={14} /> <span>{t('level')} {level}</span>
+            <div className="flex items-center gap-1.5 bg-white/20 rounded-full px-3 py-1 text-xs sm:text-sm">
+              <Star size={13} /> <span>{t('level')} {level}</span>
             </div>
           </div>
           {/* XP Progress */}

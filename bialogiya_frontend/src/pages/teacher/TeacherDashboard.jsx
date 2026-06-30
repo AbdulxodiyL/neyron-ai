@@ -30,7 +30,7 @@ export default function TeacherDashboard() {
       <div className="gradient-bg rounded-3xl p-6 text-white">
         <h1 className="text-2xl font-black">Welcome back, {user?.name}! 👋</h1>
         <p className="text-white/70 text-sm mt-1">Here's an overview of your classes today</p>
-        <div className="flex gap-3 mt-4">
+        <div className="flex flex-wrap gap-2 sm:gap-3 mt-4">
           <Link to="/teacher/lessons/create" className="bg-white/20 hover:bg-white/30 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5">
             <Plus size={14} /> New Lesson
           </Link>

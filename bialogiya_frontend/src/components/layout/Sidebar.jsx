@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { X } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useTranslation } from 'react-i18next';
 import {
@@ -43,20 +44,23 @@ const adminLinks = [
   { to: '/admin/settings', icon: Settings, key: 'settings' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { user } = useAuthStore();
   const { t } = useTranslation();
   const links = user?.role === 'student' ? studentLinks : user?.role === 'teacher' ? teacherLinks : adminLinks;
   const { level, progress } = getLevelProgress(user?.xp || 0);
 
   return (
-    <motion.aside
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      className="w-64 flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col h-full overflow-hidden"
+    <aside
+      className={cn(
+        'w-64 flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col h-full overflow-hidden',
+        'fixed inset-y-0 left-0 z-40 transition-transform duration-300 ease-in-out',
+        'md:relative md:translate-x-0',
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      )}
     >
       {/* Logo */}
-      <div className="p-5 border-b border-gray-100 dark:border-gray-800">
+      <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-glow">N</div>
           <div>
@@ -66,6 +70,13 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
+        {/* Mobile close button */}
+        <button
+          onClick={onClose}
+          className="md:hidden p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* User card */}
@@ -108,6 +119,7 @@ export default function Sidebar() {
           >
             <NavLink
               to={to}
+              onClick={onClose}
               className={({ isActive }) => cn('sidebar-link', isActive && 'active')}
             >
               <Icon size={16} />
@@ -135,6 +147,6 @@ export default function Sidebar() {
           © 2024 {t('app_name')}
         </div>
       </div>
-    </motion.aside>
+    </aside>
   );
 }
