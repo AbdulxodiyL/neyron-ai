@@ -25,7 +25,7 @@ export default function AdminGroups() {
             </div>
             <div className="space-y-1.5 text-xs text-gray-500">
               <div className="flex items-center gap-1.5"><Users size={12} /> {g.students?.length || 0} students</div>
-              <div className="flex items-center gap-1.5"><BookOpen size={12} /> Teacher: {g.teacherId?.name || 'Unassigned'}</div>
+              <div className="flex items-center gap-1.5"><BookOpen size={12} /> Teacher: {g.teacher?.name || 'Unassigned'}</div>
             </div>
           </motion.div>
         ))}

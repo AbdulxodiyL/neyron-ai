@@ -40,7 +40,7 @@ export default function AdminStudents() {
               <div className="w-9 h-9 gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">{s.name?.charAt(0)}</div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-sm">{s.name}</div>
-                <div className="text-xs text-gray-400">@{s.username} • {s.groupId?.name || 'No group'} • Teacher: {s.teacherId?.name || '-'}</div>
+                <div className="text-xs text-gray-400">@{s.username} • {s.group?.name || 'No group'} • Teacher: {s.teacher?.name || '-'}</div>
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-400 flex-shrink-0">
                 <span className="badge bg-primary/10 text-primary">Lv.{level}</span>

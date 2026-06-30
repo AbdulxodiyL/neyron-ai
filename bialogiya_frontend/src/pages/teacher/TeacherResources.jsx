@@ -90,7 +90,7 @@ export default function TeacherResources() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-sm truncate">{r.title}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{r.groupId?.name || 'All groups'} • {r.downloads} downloads</div>
+                <div className="text-xs text-gray-400 mt-0.5">{r.group?.name || 'All groups'} • {r.downloads || 0} downloads</div>
               </div>
               <button onClick={() => { if (window.confirm('Delete?')) deleteMutation.mutate(r._id); }}
                 className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50 flex-shrink-0"><Trash2 size={13} /></button>

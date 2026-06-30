@@ -24,7 +24,8 @@ export default function StudentResources() {
         {resources?.map((r, i) => {
           const Icon = TYPE_ICONS[r.type] || FileText;
           const color = TYPE_COLORS[r.type] || TYPE_COLORS.other;
-          const url = r.filePath ? `http://localhost:5000${r.filePath}` : r.fileUrl;
+          const backendBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+          const url = r.filePath ? `${backendBase}${r.filePath}` : r.fileUrl;
           return (
             <motion.div key={r._id} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}
               className="card hover:shadow-glow hover:border-primary/20 transition-all">
@@ -34,7 +35,7 @@ export default function StudentResources() {
               <h3 className="font-semibold text-sm text-gray-800 dark:text-white mb-1 line-clamp-2">{r.title}</h3>
               {r.description && <p className="text-xs text-gray-500 mb-3 line-clamp-2">{r.description}</p>}
               <div className="flex items-center justify-between">
-                <span className="badge text-xs bg-gray-100 text-gray-600">{r.type.toUpperCase()}</span>
+                <span className="badge text-xs bg-gray-100 text-gray-600">{(r.type || 'file').toUpperCase()}</span>
                 {url && (
                   <a href={url} target="_blank" rel="noreferrer" onClick={() => trackDownload.mutate(r._id)}
                     className="btn-ghost text-xs py-1 px-2 flex items-center gap-1 text-primary">

@@ -25,7 +25,7 @@ const getResources = async (req, res, next) => {
     else if (req.user.role === 'teacher') where.teacherId = req.user.userId;
     const resources = await prisma.resource.findMany({
       where, orderBy: { createdAt: 'desc' },
-      include: { teacher: { select: { id: true, name: true } } },
+      include: { teacher: { select: { id: true, name: true } }, group: { select: { id: true, name: true } } },
     });
     return success(res, resources);
   } catch (err) { next(err); }
