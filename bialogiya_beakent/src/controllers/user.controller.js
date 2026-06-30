@@ -92,7 +92,7 @@ const deleteUser = async (req, res, next) => {
 
 const resetStudentPassword = async (req, res, next) => {
   try {
-    const newPassword = generatePassword(8);
+    const newPassword = req.body.newPassword || generatePassword(8);
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await prisma.user.update({ where: { id: req.params.id }, data: { passwordHash } });
     return success(res, { newPassword }, 'Password reset');
