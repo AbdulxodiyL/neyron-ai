@@ -17,7 +17,7 @@ export default function GradeSubmissions() {
   const { data: submissions, isLoading } = useQuery({ queryKey: ['submissions', id], queryFn: () => api.get(`/homework/${id}/submissions`).then(r => r.data.data) });
 
   const gradeMutation = useMutation({
-    mutationFn: ({ subId, score, comment }) => api.put(`/homework/submissions/${subId}/grade`, { score, comment }),
+    mutationFn: ({ subId, score, comment }) => api.put(`/homework/submissions/${subId}/grade`, { score, feedback: comment }),
     onSuccess: () => { qc.invalidateQueries(['submissions', id]); toast.success('Grade saved!'); },
     onError: (e) => toast.error(e.response?.data?.message || 'Error'),
   });
@@ -38,11 +38,11 @@ export default function GradeSubmissions() {
             className="card">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                {sub.studentId?.name?.charAt(0)}
+                {sub.student?.name?.charAt(0)}
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-sm">{sub.studentId?.name}</div>
-                <div className="text-xs text-gray-400">@{sub.studentId?.username}</div>
+                <div className="font-semibold text-sm">{sub.student?.name}</div>
+                <div className="text-xs text-gray-400">@{sub.student?.username}</div>
               </div>
               {sub.finalScore !== undefined && (
                 <div className={`badge font-bold ${getScoreColor(sub.finalScore)}`}>{sub.finalScore}/{hw?.maxScore}</div>
@@ -83,7 +83,7 @@ export default function GradeSubmissions() {
             ) : (
               <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
                 <CheckCircle size={13} /> Graded — {sub.teacherGrade?.score}/{hw?.maxScore}
-                {sub.teacherGrade?.comment && <span className="text-gray-400 font-normal">• {sub.teacherGrade.comment}</span>}
+                {sub.teacherGrade?.feedback && <span className="text-gray-400 font-normal">• {sub.teacherGrade.feedback}</span>}
               </div>
             )}
           </motion.div>

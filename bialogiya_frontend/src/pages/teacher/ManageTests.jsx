@@ -34,9 +34,9 @@ export default function ManageTests() {
               <div className="font-semibold text-gray-800 dark:text-white">{t.title}</div>
               <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
                 <span className={`badge ${TYPE_COLORS[t.type] || 'bg-gray-100 text-gray-600'}`}>{t.type}</span>
-                <span>{t.groupId?.name}</span>
+                <span>{t.group?.name}</span>
                 <span className="flex items-center gap-1"><Clock size={11} /> {t.timeLimit} min</span>
-                <span>{t.questions?.length || 0} questions</span>
+                <span>{t._count?.questions || 0} questions</span>
               </div>
             </div>
             <div className="flex items-center gap-1">

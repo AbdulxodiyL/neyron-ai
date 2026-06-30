@@ -65,7 +65,7 @@ export default function StudentDashboard() {
     return t('good_evening');
   };
 
-  const pendingHW = homeworkData?.filter(h => !h.mySubmission).slice(0, 3) || [];
+  const pendingHW = homeworkData?.filter(h => !h.submissions?.[0]).slice(0, 3) || [];
   const upcomingTests = testsData?.slice(0, 3) || [];
   const scoreHistory = analytics?.scoreHistory || [];
 

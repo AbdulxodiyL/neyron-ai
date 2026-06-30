@@ -19,7 +19,7 @@ export default function StudentResults() {
             className="card">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h3 className="font-semibold text-gray-800 dark:text-white">{result.testId?.title || 'Test'}</h3>
+                <h3 className="font-semibold text-gray-800 dark:text-white">{result.test?.title || 'Test'}</h3>
                 <p className="text-xs text-gray-400 mt-0.5">{formatDate(result.completedAt)} • {Math.round(result.timeTaken / 60)} min</p>
               </div>
               <div className={`text-2xl font-black px-3 py-1 rounded-xl ${getScoreBg(result.percentage)}`}>

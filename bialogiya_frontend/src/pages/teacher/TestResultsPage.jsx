@@ -13,7 +13,7 @@ export default function TestResultsPage() {
   const { data: test } = useQuery({ queryKey: ['test', id], queryFn: () => api.get(`/tests/${id}`).then(r => r.data.data) });
   const { data: results, isLoading } = useQuery({ queryKey: ['test-results', id], queryFn: () => api.get(`/tests/${id}/results`).then(r => r.data.data) });
 
-  const chartData = results?.map(r => ({ name: r.studentId?.name?.split(' ')[0], score: r.percentage })) || [];
+  const chartData = results?.map(r => ({ name: r.student?.name?.split(' ')[0], score: r.percentage })) || [];
   const avgScore = results?.length ? Math.round(results.reduce((s, r) => s + r.percentage, 0) / results.length) : 0;
   const passed = results?.filter(r => r.passed).length || 0;
 
@@ -63,10 +63,10 @@ export default function TestResultsPage() {
           <motion.div key={r._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
             className="card flex items-center gap-3">
             <div className="w-9 h-9 gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-              {r.studentId?.name?.charAt(0)}
+              {r.student?.name?.charAt(0)}
             </div>
             <div className="flex-1">
-              <div className="font-semibold text-sm">{r.studentId?.name}</div>
+              <div className="font-semibold text-sm">{r.student?.name}</div>
               {r.aiAnalysis?.weakTopics?.length > 0 && (
                 <div className="flex items-center gap-1 text-xs text-amber-600 mt-0.5">
                   <AlertTriangle size={11} /> Weak: {r.aiAnalysis.weakTopics.slice(0, 2).join(', ')}

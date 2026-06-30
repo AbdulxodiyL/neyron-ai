@@ -15,8 +15,7 @@ export default function HomeworkSubmit() {
 
   const { data: hw } = useQuery({
     queryKey: ['homework', id],
-    queryFn: () => api.get(`/homework/group/${id}`).then(r => r.data.data),
-    enabled: false,
+    queryFn: () => api.get(`/homework/${id}`).then(r => r.data.data),
   });
 
   const submitMutation = useMutation({

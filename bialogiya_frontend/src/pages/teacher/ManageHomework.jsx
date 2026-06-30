@@ -17,7 +17,7 @@ export default function ManageHomework() {
       <div className="space-y-3">
         {homework?.map((hw, i) => {
           const isPast = new Date(hw.dueDate) < new Date();
-          const submissionRate = hw.submissionCount ? Math.round((hw.submissionCount / (hw.groupStudentCount || 1)) * 100) : 0;
+          const submissionCount = hw._count?.submissions || 0;
           return (
             <motion.div key={hw._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
               className="card">
@@ -28,7 +28,7 @@ export default function ManageHomework() {
                 <div className="flex-1">
                   <div className="font-semibold text-gray-800 dark:text-white">{hw.title}</div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                    <span>{hw.groupId?.name}</span>
+                    <span>{hw.group?.name}</span>
                     <span className="flex items-center gap-1">
                       <Clock size={11} /> Due: {formatDate(hw.dueDate)}
                     </span>
@@ -37,17 +37,17 @@ export default function ManageHomework() {
                 </div>
                 <Link to={`/teacher/homework/${hw._id}/submissions`}
                   className="btn-outline text-xs px-3 py-1.5 flex items-center gap-1">
-                  <CheckCircle size={12} /> Grade ({hw.submissionCount || 0})
+                  <CheckCircle size={12} /> Grade ({submissionCount || 0})
                 </Link>
               </div>
-              {hw.submissionCount !== undefined && (
+              {submissionCount > 0 && (
                 <div className="mt-3">
                   <div className="flex justify-between text-xs text-gray-400 mb-1">
                     <span>Submissions</span>
-                    <span>{hw.submissionCount || 0} / {hw.groupStudentCount || '?'}</span>
+                    <span>{submissionCount} submitted</span>
                   </div>
                   <div className="h-1.5 bg-gray-100 rounded-full">
-                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${submissionRate}%` }} />
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: '100%' }} />
                   </div>
                 </div>
               )}

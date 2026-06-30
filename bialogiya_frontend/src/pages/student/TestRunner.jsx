@@ -43,10 +43,14 @@ export default function TestRunner() {
 
   const handleSubmit = useCallback(() => {
     const timeTaken = Math.round((Date.now() - startTime) / 1000);
-    const formattedAnswers = Object.keys(answers).map(qi => ({
-      questionId: test.questions[parseInt(qi)]._id,
-      selectedOption: answers[qi],
-    }));
+    const formattedAnswers = Object.keys(answers).map(qi => {
+      const question = test.questions[parseInt(qi)];
+      const optionIndex = answers[qi];
+      return {
+        questionId: question._id,
+        answer: question.options?.[optionIndex]?.text,
+      };
+    });
     submitMutation.mutate({ answers: formattedAnswers, timeTaken });
   }, [answers, test, startTime]);
 

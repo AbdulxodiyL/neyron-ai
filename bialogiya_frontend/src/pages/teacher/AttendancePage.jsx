@@ -17,21 +17,21 @@ export default function AttendancePage() {
   const { data: groups } = useQuery({ queryKey: ['my-groups'], queryFn: () => api.get('/groups').then(r => r.data.data) });
   const group = groups?.find(g => g._id === selectedGroup);
 
-  const { data: existingRecord } = useQuery({
+  const { data: existingRecords } = useQuery({
     queryKey: ['attendance', selectedGroup, date],
-    queryFn: () => api.get(`/attendance/${selectedGroup}?date=${date}`).then(r => r.data.data),
-    enabled: !!selectedGroup,
-    onSuccess: (data) => {
-      if (data?.records) {
-        const map = {};
-        data.records.forEach(r => { map[r.studentId] = r.status; });
-        setAttendance(map);
+    queryFn: () => api.get(`/attendance/group/${selectedGroup}?from=${date}&to=${date}`).then(r => {
+      const records = r.data.data;
+      const dayRecord = Array.isArray(records) ? records[0] : records;
+      const map = {};
+      if (dayRecord?.records?.length) {
+        dayRecord.records.forEach(rec => { map[rec.studentId] = rec.status; });
       } else {
-        const map = {};
         group?.students?.forEach(s => { map[s._id] = 'present'; });
-        setAttendance(map);
       }
-    },
+      setAttendance(map);
+      return dayRecord;
+    }),
+    enabled: !!selectedGroup,
   });
 
   const saveMutation = useMutation({

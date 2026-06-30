@@ -11,12 +11,12 @@ export default function StudentHomework() {
     queryFn: () => api.get('/homework/student').then(r => r.data.data),
   });
 
-  const pending = homework?.filter(h => !h.mySubmission) || [];
-  const submitted = homework?.filter(h => h.mySubmission) || [];
+  const pending = homework?.filter(h => !h.submissions?.[0]) || [];
+  const submitted = homework?.filter(h => h.submissions?.[0]) || [];
 
   const HWCard = ({ hw, i }) => {
-    const isLate = new Date() > new Date(hw.dueDate) && !hw.mySubmission;
-    const sub = hw.mySubmission;
+    const sub = hw.submissions?.[0];
+    const isLate = new Date() > new Date(hw.dueDate) && !sub;
     return (
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
         className="card flex items-center gap-4 hover:shadow-soft transition-all">

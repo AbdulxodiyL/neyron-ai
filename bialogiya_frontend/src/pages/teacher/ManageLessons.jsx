@@ -40,7 +40,7 @@ export default function ManageLessons() {
               <div className="font-semibold text-gray-800 dark:text-white truncate">{l.title}</div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className={`badge text-xs ${STATUS_COLOR[l.aiContent?.status] || STATUS_COLOR.pending}`}>{STATUS[l.aiContent?.status] || 'Pending'}</span>
-                <span className="text-xs text-gray-400">{l.groupId?.name}</span>
+                <span className="text-xs text-gray-400">{l.group?.name}</span>
                 <span className="text-xs text-gray-400">{l.views} views</span>
               </div>
             </div>
