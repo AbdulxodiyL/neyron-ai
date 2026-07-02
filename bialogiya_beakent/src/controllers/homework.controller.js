@@ -141,4 +141,28 @@ const gradeSubmission = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { createHomework, getHomeworkByGroup, getTeacherHomework, getMyHomework, getHomeworkById, submitHomework, getSubmissions, gradeSubmission };
+const updateHomework = async (req, res, next) => {
+  try {
+    const { title, description, dueDate, maxScore } = req.body;
+    const hw = await prisma.homework.update({
+      where: { id: req.params.id },
+      data: {
+        ...(title && { title }),
+        ...(description !== undefined && { description }),
+        ...(dueDate && { dueDate: new Date(dueDate) }),
+        ...(maxScore && { maxScore: parseInt(maxScore) }),
+      },
+      include: { group: { select: { id: true, name: true } } },
+    });
+    return success(res, hw, 'Homework updated');
+  } catch (err) { next(err); }
+};
+
+const deleteHomework = async (req, res, next) => {
+  try {
+    await prisma.homework.update({ where: { id: req.params.id }, data: { isActive: false } });
+    return success(res, null, 'Homework deleted');
+  } catch (err) { next(err); }
+};
+
+module.exports = { createHomework, getHomeworkByGroup, getTeacherHomework, getMyHomework, getHomeworkById, submitHomework, getSubmissions, gradeSubmission, updateHomework, deleteHomework };

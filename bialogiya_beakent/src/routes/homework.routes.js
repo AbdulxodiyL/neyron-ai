@@ -4,7 +4,8 @@ const { verifyToken, requireRole } = require('../middleware/auth.middleware');
 const upload = require('../middleware/upload.middleware');
 const {
   createHomework, getHomeworkByGroup, getMyHomework,
-  submitHomework, getSubmissions, gradeSubmission, getTeacherHomework, getHomeworkById
+  submitHomework, getSubmissions, gradeSubmission, getTeacherHomework, getHomeworkById,
+  updateHomework, deleteHomework
 } = require('../controllers/homework.controller');
 
 router.get('/my', verifyToken, requireRole('teacher'), getTeacherHomework);
@@ -16,5 +17,7 @@ router.post('/:homeworkId/submit', verifyToken, requireRole('student'), upload.a
 router.get('/:homeworkId/submissions', verifyToken, requireRole('teacher', 'admin'), getSubmissions);
 router.put('/submissions/:id/grade', verifyToken, requireRole('teacher', 'admin'), gradeSubmission);
 router.get('/:id', verifyToken, getHomeworkById);
+router.put('/:id', verifyToken, requireRole('teacher', 'admin'), updateHomework);
+router.delete('/:id', verifyToken, requireRole('teacher', 'admin'), deleteHomework);
 
 module.exports = router;
