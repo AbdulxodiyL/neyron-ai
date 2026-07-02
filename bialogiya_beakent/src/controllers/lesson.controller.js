@@ -1,6 +1,8 @@
+const path = require('path');
+const fs = require('fs');
 const { prisma } = require('../config/db');
 const { success, error } = require('../utils/apiResponse');
-const { generateLessonAI } = require('../services/ai/lessonAI.service');
+const { generateLessonAI, generateTestFromPDFText } = require('../services/ai/lessonAI.service');
 
 const createLesson = async (req, res, next) => {
   try {
@@ -96,4 +98,52 @@ const regenerateAI = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { createLesson, getLessons, getLessonById, updateLesson, deleteLesson, getAIContent, regenerateAI };
+const generateTestFromPDF = async (req, res, next) => {
+  try {
+    const { groupId, title, timeLimit, passingScore } = req.body;
+    if (!groupId) return error(res, 'groupId required', 400);
+    if (!req.file) return error(res, 'PDF file required', 400);
+
+    const pdfParse = require('pdf-parse');
+    const buffer = fs.readFileSync(req.file.path);
+    const pdfData = await pdfParse(buffer);
+    const pdfText = pdfData.text;
+
+    if (!pdfText || pdfText.trim().length < 50) {
+      return error(res, 'Could not extract text from PDF', 400);
+    }
+
+    const testTitle = title || `Test from PDF - ${new Date().toLocaleDateString()}`;
+    const generated = await generateTestFromPDFText(pdfText, groupId, req.user.userId, testTitle);
+
+    const questions = (generated.questions || []).map(q => ({
+      text: q.text,
+      type: 'mcq',
+      options: q.options || [],
+      difficulty: q.difficulty || 'medium',
+      points: q.points || 1,
+      explanation: q.explanation || '',
+    }));
+
+    const test = await prisma.test.create({
+      data: {
+        title: generated.title || testTitle,
+        type: 'topic',
+        groupId,
+        teacherId: req.user.userId,
+        timeLimit: parseInt(timeLimit) || 30,
+        passingScore: parseInt(passingScore) || 60,
+        questions: { create: questions },
+      },
+      include: { questions: true, group: { select: { id: true, name: true } } },
+    });
+
+    await prisma.test.update({ where: { id: test.id }, data: { totalPoints: test.questions.reduce((s, q) => s + q.points, 0) } });
+
+    fs.unlink(req.file.path, () => {});
+
+    return success(res, test, 'Test generated from PDF', 201);
+  } catch (err) { next(err); }
+};
+
+module.exports = { createLesson, getLessons, getLessonById, updateLesson, deleteLesson, getAIContent, regenerateAI, generateTestFromPDF };

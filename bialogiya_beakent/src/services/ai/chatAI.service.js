@@ -1,21 +1,18 @@
-const openai = require('../../config/openai');
+const { getModel } = require('../../config/gemini');
 const { getChatSystemPrompt } = require('./prompts');
 
-// lesson object passed directly from controller (avoids double DB call)
 const chatWithAI = async (lesson, messages, userMessage, style = 'normal', language = 'uz') => {
   const aiContent = lesson.aiContent || {};
   const systemPrompt = getChatSystemPrompt(lesson.title, aiContent.summary || '', style, language);
 
-  const history = (messages || []).slice(-10).map(m => ({ role: m.role, content: m.content }));
+  const history = (messages || []).slice(-10);
+  const historyText = history.map(m => `${m.role === 'user' ? 'Student' : 'Teacher AI'}: ${m.content}`).join('\n');
 
-  const response = await openai.chat.completions.create({
-    model: process.env.OPENAI_MODEL || 'gpt-4o',
-    messages: [{ role: 'system', content: systemPrompt }, ...history],
-    temperature: 0.8,
-    max_tokens: 800,
-  });
+  const fullPrompt = `${systemPrompt}\n\nConversation so far:\n${historyText}\n\nStudent: ${userMessage}\nTeacher AI:`;
 
-  return response.choices[0].message.content;
+  const model = getModel(false);
+  const result = await model.generateContent(fullPrompt);
+  return result.response.text().trim();
 };
 
 module.exports = { chatWithAI };

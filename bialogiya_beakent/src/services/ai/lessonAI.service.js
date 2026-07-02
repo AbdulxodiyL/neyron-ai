@@ -1,4 +1,4 @@
-const openai = require('../../config/openai');
+const { getModel } = require('../../config/gemini');
 const { prisma } = require('../../config/db');
 const { LESSON_SYSTEM_PROMPT, getLessonGenerationPrompt } = require('./prompts');
 
@@ -6,18 +6,12 @@ const generateLessonAI = async (lessonId, title, content, language = 'uz') => {
   await prisma.lesson.update({ where: { id: lessonId }, data: { aiContent: { status: 'generating' } } });
 
   try {
-    const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4o',
-      messages: [
-        { role: 'system', content: LESSON_SYSTEM_PROMPT },
-        { role: 'user', content: getLessonGenerationPrompt(title, content || title, language) },
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.7,
-      max_tokens: 4000,
-    });
+    const model = getModel(true);
+    const prompt = `${LESSON_SYSTEM_PROMPT}\n\n${getLessonGenerationPrompt(title, content || title, language)}`;
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    const parsed = JSON.parse(text);
 
-    const parsed = JSON.parse(response.choices[0].message.content);
     await prisma.lesson.update({
       where: { id: lessonId },
       data: {
@@ -43,19 +37,51 @@ const generateLessonAI = async (lessonId, title, content, language = 'uz') => {
 };
 
 const generateQuiz = async (title, content, difficulty = 'medium') => {
-  const prompt = `Generate 10 multiple-choice quiz questions about "${title}" with content: "${content.slice(0, 500)}".
-Difficulty: ${difficulty}. Return JSON: {"questions":[{"text":"...","options":[{"text":"...","isCorrect":bool}],"explanation":"...","difficulty":"${difficulty}","points":1}]}`;
+  const prompt = `Generate 10 multiple-choice quiz questions about "${title}" based on: "${content.slice(0, 1000)}".
+Difficulty: ${difficulty}.
+Return valid JSON: {"questions":[{"text":"...","options":[{"text":"...","isCorrect":false},{"text":"...","isCorrect":true}],"explanation":"...","difficulty":"${difficulty}","points":1}]}
+Each question must have exactly 4 options with exactly one isCorrect:true.`;
 
-  const response = await openai.chat.completions.create({
-    model: process.env.OPENAI_MODEL || 'gpt-4o',
-    messages: [{ role: 'user', content: prompt }],
-    response_format: { type: 'json_object' },
-    temperature: 0.7,
-    max_tokens: 2000,
-  });
-
-  const parsed = JSON.parse(response.choices[0].message.content);
-  return parsed.questions || [];
+  try {
+    const model = getModel(true);
+    const result = await model.generateContent(prompt);
+    const parsed = JSON.parse(result.response.text());
+    return parsed.questions || [];
+  } catch (err) {
+    console.error('Quiz generation error:', err.message);
+    return [];
+  }
 };
 
-module.exports = { generateLessonAI, generateQuiz };
+const generateTestFromPDFText = async (pdfText, groupId, teacherId, title) => {
+  const prompt = `You are a Biology/Chemistry teacher. Based on the following textbook content, create 15 multiple-choice test questions.
+Content:
+${pdfText.slice(0, 3000)}
+
+Return valid JSON:
+{
+  "title": "${title}",
+  "questions": [
+    {
+      "text": "question text",
+      "options": [
+        {"text": "option A", "isCorrect": false},
+        {"text": "option B", "isCorrect": true},
+        {"text": "option C", "isCorrect": false},
+        {"text": "option D", "isCorrect": false}
+      ],
+      "explanation": "why this answer is correct",
+      "difficulty": "medium",
+      "points": 1
+    }
+  ]
+}
+Each question must have exactly 4 options with exactly one isCorrect:true.`;
+
+  const model = getModel(true);
+  const result = await model.generateContent(prompt);
+  const parsed = JSON.parse(result.response.text());
+  return parsed;
+};
+
+module.exports = { generateLessonAI, generateQuiz, generateTestFromPDFText };

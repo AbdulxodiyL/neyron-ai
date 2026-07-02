@@ -37,6 +37,7 @@ model User {
   achievements     Json      @default("[]")
   refreshTokenHash String?
   isActive         Boolean   @default(true)
+  isFrozen         Boolean   @default(false)
   lastLogin        DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -57,6 +58,7 @@ model User {
   aiChats       AIChat[]
   resources     Resource[]
   attendances   Attendance[]
+  payments      Payment[]      @relation("StudentPayments")
 }
 
 model Group {
@@ -78,6 +80,7 @@ model Group {
   homework    Homework[]
   tests       Test[]
   attendances Attendance[]
+  resources   Resource[]
 }
 
 model Lesson {
@@ -246,12 +249,29 @@ model Resource {
   title       String
   description String?
   filePath    String
+  fileUrl     String?
   type        String   @default("other")
   downloads   Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
   groupId   String?
+  group     Group?  @relation(fields: [groupId], references: [id])
   teacherId String
-  teacher   User   @relation(fields: [teacherId], references: [id])
+  teacher   User    @relation(fields: [teacherId], references: [id])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  month     String
+  isPaid    Boolean  @default(true)
+  note      String?
+  paidAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  studentId String
+  student   User   @relation("StudentPayments", fields: [studentId], references: [id])
+  teacherId String
+
+  @@unique([studentId, month])
 }

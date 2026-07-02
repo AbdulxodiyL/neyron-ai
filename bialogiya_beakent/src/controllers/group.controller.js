@@ -39,7 +39,15 @@ const getGroupById = async (req, res, next) => {
   try {
     const group = await prisma.group.findUnique({
       where: { id: req.params.id },
-      include: { teacher: { select: { id: true, name: true } }, students: { select: { id: true, name: true, username: true, xp: true, level: true } } },
+      include: {
+        teacher: { select: { id: true, name: true } },
+        students: {
+          where: { isActive: true },
+          select: { id: true, name: true, username: true, xp: true, level: true, isFrozen: true, lastLogin: true },
+          orderBy: { name: 'asc' },
+        },
+        _count: { select: { students: true } },
+      },
     });
     if (!group) return error(res, 'Group not found', 404);
     return success(res, group);

@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Users, Trash2, Edit, X, Check } from 'lucide-react';
+import { Plus, Users, Trash2, ChevronRight, X } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
 
@@ -10,6 +11,7 @@ const ICONS = ['🧬', '⚗️', '📚', '🔬', '🧪', '💊', '🌿', '🦠']
 
 export default function ManageGroups() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', subject: 'biology', icon: '🧬', color: '#00BFA6' });
 
@@ -88,23 +90,27 @@ export default function ManageGroups() {
       <div className="grid sm:grid-cols-2 gap-4">
         {groups?.map((g, i) => (
           <motion.div key={g._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-            className="card hover:shadow-soft transition-all">
+            onClick={() => navigate(`/teacher/groups/${g._id}`)}
+            className="card hover:shadow-soft transition-all cursor-pointer hover:border-primary/30 hover:bg-primary/2 group">
             <div className="flex items-start gap-3 mb-3">
               <div className="w-12 h-12 gradient-bg rounded-2xl flex items-center justify-center text-2xl">{g.icon || '📚'}</div>
               <div className="flex-1">
-                <h3 className="font-bold text-gray-800 dark:text-white">{g.name}</h3>
+                <h3 className="font-bold text-gray-800 dark:text-white group-hover:text-primary transition-colors">{g.name}</h3>
                 <span className={`badge text-xs mt-0.5 ${g.subject === 'biology' ? 'bg-green-100 text-green-700' : g.subject === 'chemistry' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                   {g.subject}
                 </span>
               </div>
-              <button onClick={() => { if (window.confirm('Delete this group?')) deleteMutation.mutate(g._id); }}
-                className="btn-ghost p-1.5 text-red-400 hover:bg-red-50 rounded-lg">
-                <Trash2 size={14} />
-              </button>
+              <div className="flex items-center gap-1">
+                <button onClick={e => { e.stopPropagation(); if (window.confirm('Guruhni o\'chirish?')) deleteMutation.mutate(g._id); }}
+                  className="btn-ghost p-1.5 text-red-400 hover:bg-red-50 rounded-lg">
+                  <Trash2 size={14} />
+                </button>
+                <ChevronRight size={16} className="text-gray-300 group-hover:text-primary transition-colors" />
+              </div>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-gray-500">
               <Users size={14} />
-              <span>{g.students?.length || 0} students</span>
+              <span>{g.students?.length || 0} o'quvchi</span>
             </div>
             {g.description && <p className="text-xs text-gray-400 mt-2">{g.description}</p>}
           </motion.div>

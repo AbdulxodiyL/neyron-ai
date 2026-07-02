@@ -99,4 +99,16 @@ const resetStudentPassword = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { createStudent, createTeacher, getStudentsByTeacher, getAllUsers, updateProfile, updateUser, deleteUser, resetStudentPassword };
+const freezeStudent = async (req, res, next) => {
+  try {
+    const student = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!student) return error(res, 'Student not found', 404);
+    const updated = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { isFrozen: !student.isFrozen },
+    });
+    return success(res, { isFrozen: updated.isFrozen }, updated.isFrozen ? 'Student frozen' : 'Student unfrozen');
+  } catch (err) { next(err); }
+};
+
+module.exports = { createStudent, createTeacher, getStudentsByTeacher, getAllUsers, updateProfile, updateUser, deleteUser, resetStudentPassword, freezeStudent };

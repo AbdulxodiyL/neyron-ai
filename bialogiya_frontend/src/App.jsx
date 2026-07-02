@@ -23,6 +23,7 @@ import StudentAnalytics from './pages/student/StudentAnalytics';
 // Teacher pages
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import ManageGroups from './pages/teacher/ManageGroups';
+import GroupDetail from './pages/teacher/GroupDetail';
 import ManageStudents from './pages/teacher/ManageStudents';
 import ManageLessons from './pages/teacher/ManageLessons';
 import CreateLesson from './pages/teacher/CreateLesson';
@@ -90,6 +91,7 @@ export default function App() {
         <Route path="/teacher" element={<ProtectedRoute role="teacher"><MainLayout /></ProtectedRoute>}>
           <Route path="dashboard" element={<TeacherDashboard />} />
           <Route path="groups" element={<ManageGroups />} />
+          <Route path="groups/:id" element={<GroupDetail />} />
           <Route path="students" element={<ManageStudents />} />
           <Route path="lessons" element={<ManageLessons />} />
           <Route path="lessons/create" element={<CreateLesson />} />

@@ -11,5 +11,6 @@ router.use('/attendance', require('./attendance.routes'));
 router.use('/resources', require('./resource.routes'));
 router.use('/analytics', require('./analytics.routes'));
 router.use('/admin', require('./admin.routes'));
+router.use('/payments', require('./payment.routes'));
 
 module.exports = router;

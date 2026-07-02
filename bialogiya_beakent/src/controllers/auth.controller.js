@@ -14,6 +14,7 @@ const login = async (req, res, next) => {
     });
 
     if (!user || !user.isActive) return error(res, 'Invalid credentials', 401);
+    if (user.isFrozen) return error(res, 'Hisobingiz muzlatilgan. O\'qituvchi bilan bog\'laning.', 403);
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return error(res, 'Invalid credentials', 401);
