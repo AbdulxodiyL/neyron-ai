@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Copy, X, UserCheck, Pencil, Trash2, Save, Users, GraduationCap, Phone, BookOpen, ChevronRight } from 'lucide-react';
+import { Plus, Copy, X, UserCheck, Pencil, Trash2, Save, Users, GraduationCap, Phone, BookOpen } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
 
@@ -11,7 +11,7 @@ export default function AdminTeachers() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', language: 'uz' });
   const [newCreds, setNewCreds] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
-  const [editingTeacher, setEditingTeacher] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
 
   const { data: teachers } = useQuery({
@@ -31,13 +31,11 @@ export default function AdminTeachers() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => api.put(`/admin/teachers/${id}`, data),
-    onSuccess: ({ data }) => {
+    onSuccess: () => {
       qc.invalidateQueries(['all-teachers']);
       toast.success('O\'qituvchi yangilandi');
-      setEditingTeacher(null);
-      if (selectedTeacher?.id === data.data.id) {
-        setSelectedTeacher(t => ({ ...t, ...data.data }));
-      }
+      setEditingId(null);
+      setSelectedTeacher(null);
     },
     onError: (e) => toast.error(e.response?.data?.message || 'Xato'),
   });
@@ -59,17 +57,15 @@ export default function AdminTeachers() {
 
   const copy = (text) => { navigator.clipboard.writeText(text); toast.success('Nusxalandi!'); };
 
-  const openEdit = (t, e) => {
-    e?.stopPropagation();
-    setEditingTeacher(t.id);
+  const openEdit = (t) => {
+    setEditingId(t._id);
     setEditForm({ name: t.name, phone: t.phone || '', email: t.email || '' });
     setSelectedTeacher(null);
   };
 
-  const handleDelete = (t, e) => {
-    e?.stopPropagation();
+  const handleDelete = (t) => {
     if (window.confirm(`"${t.name}" ni o'chirishni tasdiqlaysizmi?`)) {
-      deleteMutation.mutate(t.id);
+      deleteMutation.mutate(t._id);
     }
   };
 
@@ -85,15 +81,15 @@ export default function AdminTeachers() {
       {/* Teacher list */}
       <div className="space-y-2">
         {teachers?.map((t, i) => {
-          const isEditing = editingTeacher === t.id;
+          const isEditing = editingId === t._id;
           return (
-            <motion.div key={t.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+            <motion.div key={t._id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
               className="card">
               {isEditing ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-primary">Tahrirlash</span>
-                    <button onClick={() => setEditingTeacher(null)} className="btn-ghost p-1.5 rounded-lg"><X size={14} /></button>
+                    <button onClick={() => setEditingId(null)} className="btn-ghost p-1.5 rounded-lg"><X size={14} /></button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -113,9 +109,9 @@ export default function AdminTeachers() {
                       className="input-field text-sm" placeholder="email@example.com" type="email" />
                   </div>
                   <div className="flex gap-2 pt-1">
-                    <button onClick={() => setEditingTeacher(null)} className="btn-ghost flex-1 text-sm">Bekor</button>
+                    <button onClick={() => setEditingId(null)} className="btn-ghost flex-1 text-sm">Bekor</button>
                     <button
-                      onClick={() => editForm.name && updateMutation.mutate({ id: t.id, data: editForm })}
+                      onClick={() => editForm.name && updateMutation.mutate({ id: t._id, data: editForm })}
                       disabled={!editForm.name || updateMutation.isPending}
                       className="btn-primary flex-1 text-sm flex items-center justify-center gap-1.5 disabled:opacity-40">
                       <Save size={13} />
@@ -124,43 +120,45 @@ export default function AdminTeachers() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-3 cursor-pointer group"
-                  onClick={() => setSelectedTeacher(t)}>
-                  <div className="w-10 h-10 gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                    {t.name?.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm text-gray-800 dark:text-white group-hover:text-primary transition-colors">
-                      {t.name}
+                <div className="flex items-center gap-3">
+                  {/* Clickable area for detail */}
+                  <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedTeacher(t)}>
+                    <div className="w-10 h-10 gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                      {t.name?.charAt(0)}
                     </div>
-                    <div className="text-xs text-gray-400 flex items-center gap-2 flex-wrap">
-                      <span>@{t.username}</span>
-                      {t.phone && <span className="flex items-center gap-0.5"><Phone size={10} /> {t.phone}</span>}
-                      {t.email && <span>{t.email}</span>}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm text-gray-800 dark:text-white hover:text-primary transition-colors">
+                        {t.name}
+                      </div>
+                      <div className="text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                        <span>@{t.username}</span>
+                        {t.phone && <span className="flex items-center gap-0.5"><Phone size={10} /> {t.phone}</span>}
+                        {t.email && <span>{t.email}</span>}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="text-xs text-gray-400 flex items-center gap-3">
+                    <div className="text-xs text-gray-400 flex items-center gap-3 flex-shrink-0">
                       <span className="flex items-center gap-1">
-                        <Users size={12} className="text-primary" /> {t._count?.taughtGroups || 0} guruh
+                        <Users size={12} className="text-primary" /> {t._count?.taughtGroups || 0}
                       </span>
                       <span className="flex items-center gap-1">
-                        <GraduationCap size={12} className="text-secondary" /> {t._count?.students || 0} o'q
+                        <GraduationCap size={12} className="text-secondary" /> {t._count?.students || 0}
                       </span>
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); toggleMutation.mutate(t.id); }}
+                  </div>
+                  {/* Always-visible action buttons */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => { toggleMutation.mutate(t._id); }}
                       className={`badge text-xs cursor-pointer ${t.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {t.isActive ? 'Faol' : 'Nofaol'}
                     </button>
-                    <button onClick={(e) => openEdit(t, e)}
-                      className="btn-ghost p-1.5 rounded-lg text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Pencil size={13} />
+                    <button onClick={() => openEdit(t)}
+                      className="btn-ghost p-2 rounded-lg text-primary hover:bg-primary/10" title="Tahrirlash">
+                      <Pencil size={14} />
                     </button>
-                    <button onClick={(e) => handleDelete(t, e)}
-                      className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Trash2 size={13} />
+                    <button onClick={() => handleDelete(t)}
+                      className="btn-ghost p-2 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" title="O'chirish">
+                      <Trash2 size={14} />
                     </button>
-                    <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors" />
                   </div>
                 </div>
               )}
@@ -187,7 +185,7 @@ export default function AdminTeachers() {
                 <h2 className="font-bold text-lg text-gray-800 dark:text-white">O'qituvchi ma'lumoti</h2>
                 <div className="flex items-center gap-1">
                   <button onClick={() => openEdit(selectedTeacher)}
-                    className="btn-ghost p-1.5 rounded-lg text-primary" title="Tahrirlash">
+                    className="btn-ghost p-1.5 rounded-lg text-primary hover:bg-primary/10" title="Tahrirlash">
                     <Pencil size={15} />
                   </button>
                   <button onClick={() => handleDelete(selectedTeacher)}
@@ -200,7 +198,6 @@ export default function AdminTeachers() {
                 </div>
               </div>
 
-              {/* Avatar */}
               <div className="flex flex-col items-center mb-5">
                 <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center text-white text-2xl font-bold mb-3">
                   {selectedTeacher.name?.charAt(0)}
@@ -212,30 +209,23 @@ export default function AdminTeachers() {
                 </span>
               </div>
 
-              {/* Info */}
               <div className="space-y-3 mb-4">
                 <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-2xl p-3">
                   <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Phone size={16} className="text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-xs text-gray-400">Telefon raqami</div>
-                    <div className="font-semibold text-sm text-gray-800 dark:text-white">
-                      {selectedTeacher.phone || '—'}
-                    </div>
+                    <div className="text-xs text-gray-400">Telefon</div>
+                    <div className="font-semibold text-sm text-gray-800 dark:text-white">{selectedTeacher.phone || '—'}</div>
                   </div>
                   {selectedTeacher.phone && (
-                    <button onClick={() => copy(selectedTeacher.phone)} className="btn-ghost p-1.5 rounded-lg">
-                      <Copy size={13} />
-                    </button>
+                    <button onClick={() => copy(selectedTeacher.phone)} className="btn-ghost p-1.5 rounded-lg"><Copy size={13} /></button>
                   )}
                 </div>
 
                 {selectedTeacher.email && (
                   <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-2xl p-3">
-                    <div className="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-purple-600 text-xs font-bold">@</span>
-                    </div>
+                    <div className="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0 text-purple-600 text-xs font-bold">@</div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-400">Email</div>
                       <div className="font-semibold text-sm text-gray-800 dark:text-white">{selectedTeacher.email}</div>
@@ -243,34 +233,26 @@ export default function AdminTeachers() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Users size={13} className="text-primary" />
-                      <span className="text-xs text-gray-400">Guruhlar</span>
-                    </div>
-                    <div className="font-bold text-primary text-xl">{selectedTeacher._count?.taughtGroups || 0}</div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
+                    <Users size={16} className="text-primary mx-auto mb-1" />
+                    <div className="font-bold text-primary text-lg">{selectedTeacher._count?.taughtGroups || 0}</div>
+                    <div className="text-xs text-gray-400">Guruh</div>
                   </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <GraduationCap size={13} className="text-secondary" />
-                      <span className="text-xs text-gray-400">O'quvchilar</span>
-                    </div>
-                    <div className="font-bold text-secondary text-xl">{selectedTeacher._count?.students || 0}</div>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
+                    <GraduationCap size={16} className="text-secondary mx-auto mb-1" />
+                    <div className="font-bold text-secondary text-lg">{selectedTeacher._count?.students || 0}</div>
+                    <div className="text-xs text-gray-400">O'quvchi</div>
                   </div>
-                </div>
-
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <BookOpen size={13} className="text-amber-500" />
-                    <span className="text-xs text-gray-400">Darslar</span>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
+                    <BookOpen size={16} className="text-amber-500 mx-auto mb-1" />
+                    <div className="font-bold text-amber-600 text-lg">{selectedTeacher._count?.lessons || 0}</div>
+                    <div className="text-xs text-gray-400">Dars</div>
                   </div>
-                  <div className="font-bold text-amber-600 text-xl">{selectedTeacher._count?.lessons || 0}</div>
                 </div>
               </div>
 
-              <button
-                onClick={() => { toggleMutation.mutate(selectedTeacher.id); setSelectedTeacher(null); }}
+              <button onClick={() => { toggleMutation.mutate(selectedTeacher._id); setSelectedTeacher(null); }}
                 className="btn-ghost w-full flex items-center justify-center gap-2 text-sm border border-gray-200 dark:border-gray-700">
                 {selectedTeacher.isActive ? 'Hisobni o\'chirish' : 'Hisobni yoqish'}
               </button>
@@ -279,7 +261,7 @@ export default function AdminTeachers() {
         )}
       </AnimatePresence>
 
-      {/* Create modal */}
+      {/* Create teacher modal */}
       <AnimatePresence>
         {showCreate && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

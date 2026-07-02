@@ -42,15 +42,24 @@ const maxSize = parseInt(process.env.MAX_FILE_SIZE_MB || '50') * 1024 * 1024;
 
 const upload = multer({ storage, fileFilter, limits: { fileSize: maxSize } });
 
-// Memory storage for PDF processing (no disk write needed)
-const pdfUpload = multer({
+// Memory storage for AI file processing (PDF, DOCX, TXT, images)
+const aiFileMimes = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+];
+
+const fileUpload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') cb(null, true);
-    else cb(new Error('Only PDF files are allowed'), false);
+    if (aiFileMimes.includes(file.mimetype)) cb(null, true);
+    else cb(new Error(`Qo'llab-quvvatlanmaydigan fayl turi: ${file.mimetype}`), false);
   },
   limits: { fileSize: maxSize },
 });
 
 module.exports = upload;
-module.exports.pdfUpload = pdfUpload;
+module.exports.pdfUpload = fileUpload;
+module.exports.fileUpload = fileUpload;

@@ -39,12 +39,21 @@ export default function ManageTests() {
   });
 
   const handlePdfSubmit = () => {
-    if (!pdfFile || !pdfGroupId) return toast.error('PDF va guruhni tanlang');
+    if (!pdfFile || !pdfGroupId) return toast.error('Fayl va guruhni tanlang');
     const fd = new FormData();
     fd.append('pdf', pdfFile);
     fd.append('groupId', pdfGroupId);
     if (pdfTitle) fd.append('title', pdfTitle);
     pdfMutation.mutate(fd);
+  };
+
+  const getFileIcon = (file) => {
+    if (!file) return null;
+    if (file.type === 'application/pdf') return '📄';
+    if (file.type.startsWith('image/')) return '🖼️';
+    if (file.type.includes('word')) return '📝';
+    if (file.type === 'text/plain') return '📃';
+    return '📎';
   };
 
   return (
@@ -53,7 +62,7 @@ export default function ManageTests() {
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Testlar</h1>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowPdfModal(true)} className="btn-ghost flex items-center gap-2 text-sm border border-primary/30 text-primary hover:bg-primary/5">
-            <Upload size={14} /> PDF dan yaratish
+            <Upload size={14} /> Fayldan yaratish
           </button>
           <Link to="/teacher/tests/create" className="btn-primary flex items-center gap-2"><Plus size={15} /> Test yaratish</Link>
         </div>
@@ -67,7 +76,7 @@ export default function ManageTests() {
             onClick={e => e.target === e.currentTarget && setShowPdfModal(false)}>
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="font-bold text-lg">📄 PDF dan test yaratish</h2>
+                <h2 className="font-bold text-lg">📄 Fayldan test yaratish</h2>
                 <button onClick={() => setShowPdfModal(false)} className="btn-ghost p-1.5 rounded-lg"><X size={16} /></button>
               </div>
               <div className="space-y-4">
@@ -83,30 +92,33 @@ export default function ManageTests() {
                   <input value={pdfTitle} onChange={e => setPdfTitle(e.target.value)} placeholder="AI avtomatik nom beradi" className="input-field" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">PDF fayl *</label>
+                  <label className="block text-sm font-medium mb-1.5">Fayl *</label>
                   <div
                     onClick={() => fileRef.current?.click()}
                     className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all
                       ${pdfFile ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'}`}>
                     {pdfFile ? (
                       <div>
-                        <div className="text-2xl mb-1">📄</div>
+                        <div className="text-2xl mb-1">{getFileIcon(pdfFile)}</div>
                         <div className="text-sm font-medium text-primary">{pdfFile.name}</div>
                         <div className="text-xs text-gray-400">{(pdfFile.size / 1024 / 1024).toFixed(1)} MB</div>
+                        <button onClick={e => { e.stopPropagation(); setPdfFile(null); }}
+                          className="text-xs text-red-400 mt-1 hover:underline">O'chirish</button>
                       </div>
                     ) : (
                       <div>
                         <Upload size={24} className="mx-auto mb-2 text-gray-400" />
-                        <div className="text-sm text-gray-500">PDF faylni yuklash uchun bosing</div>
-                        <div className="text-xs text-gray-400 mt-1">Maks 50MB</div>
+                        <div className="text-sm text-gray-500">Faylni yuklash uchun bosing yoki tashlang</div>
+                        <div className="text-xs text-gray-400 mt-1">PDF, Word (.docx), TXT, Rasm (JPG, PNG)</div>
                       </div>
                     )}
                   </div>
-                  <input ref={fileRef} type="file" accept=".pdf,application/pdf" className="hidden"
-                    onChange={e => setPdfFile(e.target.files?.[0] || null)} />
+                  <input ref={fileRef} type="file"
+                    accept=".pdf,.docx,.doc,.txt,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,image/*"
+                    className="hidden" onChange={e => setPdfFile(e.target.files?.[0] || null)} />
                 </div>
                 <p className="text-xs text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
-                  AI PDFni o'qib, undagi ma'lumotlardan 15 ta test savoli yaratadi va guruhga tayinlaydi.
+                  AI faylni o'qib, undagi ma'lumotlardan 15 ta test savoli yaratadi va guruhga tayinlaydi. Rasmlar uchun Gemini Vision ishlatiladi.
                 </p>
               </div>
               <div className="flex gap-3 mt-5">

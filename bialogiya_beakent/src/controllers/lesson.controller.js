@@ -96,22 +96,63 @@ const regenerateAI = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const extractTextFromFile = async (file) => {
+  const mime = file.mimetype;
+
+  // Plain text
+  if (mime === 'text/plain') {
+    return file.buffer.toString('utf8');
+  }
+
+  // PDF
+  if (mime === 'application/pdf') {
+    const pdfParse = require('pdf-parse');
+    const data = await pdfParse(file.buffer);
+    return data.text;
+  }
+
+  // DOCX / DOC
+  if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      mime === 'application/msword') {
+    const mammoth = require('mammoth');
+    const result = await mammoth.extractRawText({ buffer: file.buffer });
+    return result.value;
+  }
+
+  // Images — use Gemini vision
+  if (mime.startsWith('image/')) {
+    const { getModel } = require('../config/gemini');
+    const model = getModel(false);
+    const imagePart = { inlineData: { data: file.buffer.toString('base64'), mimeType: mime } };
+    const result = await model.generateContent([
+      'Bu rasmning barcha matnini va ta\'lim mazmunini batafsil yoz. Mavzu, tushunchalar, jadvallar va diagrammalardagi ma\'lumotlarni ham yoz.',
+      imagePart,
+    ]);
+    return result.response.text();
+  }
+
+  throw new Error('Qo\'llab-quvvatlanmaydigan fayl turi');
+};
+
 const generateTestFromPDF = async (req, res, next) => {
   try {
     const { groupId, title, timeLimit, passingScore } = req.body;
     if (!groupId) return error(res, 'groupId required', 400);
-    if (!req.file) return error(res, 'PDF file required', 400);
+    if (!req.file) return error(res, 'Fayl yuborilmadi', 400);
 
-    const pdfParse = require('pdf-parse');
-    // Use buffer directly from memory storage (no disk read needed)
-    const pdfData = await pdfParse(req.file.buffer);
-    const pdfText = pdfData.text;
-
-    if (!pdfText || pdfText.trim().length < 50) {
-      return error(res, 'Could not extract text from PDF', 400);
+    let extractedText;
+    try {
+      extractedText = await extractTextFromFile(req.file);
+    } catch (e) {
+      return error(res, `Fayldan matn chiqarib bo'lmadi: ${e.message}`, 400);
     }
 
-    const testTitle = title || `PDF Test - ${new Date().toLocaleDateString('uz-UZ')}`;
+    const pdfText = extractedText?.trim() || '';
+    if (pdfText.length < 30) {
+      return error(res, 'Faylda yetarli matn topilmadi', 400);
+    }
+
+    const testTitle = title || `Test - ${new Date().toLocaleDateString('uz-UZ')}`;
     const generated = await generateTestFromPDFText(pdfText, groupId, req.user.userId, testTitle);
 
     const questions = (generated.questions || []).map(q => ({
