@@ -1,30 +1,70 @@
 const { PrismaClient } = require('@prisma/client');
-const { execSync } = require('child_process');
-const path = require('path');
 
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
 });
 
-const runMigrations = () => {
+const runMigrations = async () => {
   try {
-    console.log('🔄 Running database schema sync...');
-    execSync('npx prisma db push', {
-      stdio: 'inherit',
-      cwd: path.join(__dirname, '../../'),
-      env: { ...process.env },
-    });
-    console.log('✅ Schema sync complete');
+    // Add isFrozen to User if missing
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isFrozen" BOOLEAN NOT NULL DEFAULT false
+    `);
+
+    // Add fileUrl to Resource if missing
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "Resource" ADD COLUMN IF NOT EXISTS "fileUrl" TEXT
+    `);
+
+    // Create Payment table if missing
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Payment" (
+        "id"        TEXT NOT NULL,
+        "month"     TEXT NOT NULL,
+        "isPaid"    BOOLEAN NOT NULL DEFAULT true,
+        "note"      TEXT,
+        "paidAt"    TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "studentId" TEXT NOT NULL,
+        "teacherId" TEXT NOT NULL,
+        CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
+      )
+    `);
+
+    // Add unique constraint on Payment (studentId, month) if missing
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'Payment_studentId_month_key'
+        ) THEN
+          ALTER TABLE "Payment" ADD CONSTRAINT "Payment_studentId_month_key" UNIQUE ("studentId", "month");
+        END IF;
+      END $$
+    `);
+
+    // Add FK on Payment.studentId if missing
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'Payment_studentId_fkey'
+        ) THEN
+          ALTER TABLE "Payment" ADD CONSTRAINT "Payment_studentId_fkey"
+            FOREIGN KEY ("studentId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+        END IF;
+      END $$
+    `);
+
+    console.log('✅ Schema migrations applied');
   } catch (err) {
-    console.warn('⚠️  Schema sync warning (non-fatal):', err.message);
+    console.warn('⚠️  Migration warning (non-fatal):', err.message);
   }
 };
 
 const connectDB = async () => {
   try {
-    runMigrations();
     await prisma.$connect();
     console.log('✅ PostgreSQL (Neon) connected via Prisma');
+    await runMigrations();
   } catch (err) {
     console.error('❌ Database connection error:', err.message);
     process.exit(1);
