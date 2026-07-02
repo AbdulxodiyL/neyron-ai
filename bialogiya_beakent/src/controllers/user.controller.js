@@ -99,6 +99,25 @@ const resetStudentPassword = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) return error(res, 'currentPassword va newPassword talab qilinadi', 400);
+    if (newPassword.length < 6) return error(res, 'Yangi parol kamida 6 ta belgidan iborat bo\'lishi kerak', 400);
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    if (!user) return error(res, 'Foydalanuvchi topilmadi', 404);
+
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) return error(res, 'Joriy parol noto\'g\'ri', 401);
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: req.user.userId }, data: { passwordHash } });
+
+    return success(res, null, 'Parol muvaffaqiyatli o\'zgartirildi');
+  } catch (err) { next(err); }
+};
+
 const freezeStudent = async (req, res, next) => {
   try {
     const student = await prisma.user.findUnique({ where: { id: req.params.id } });
@@ -111,4 +130,4 @@ const freezeStudent = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { createStudent, createTeacher, getStudentsByTeacher, getAllUsers, updateProfile, updateUser, deleteUser, resetStudentPassword, freezeStudent };
+module.exports = { createStudent, createTeacher, getStudentsByTeacher, getAllUsers, updateProfile, updateUser, deleteUser, resetStudentPassword, freezeStudent, changePassword };
