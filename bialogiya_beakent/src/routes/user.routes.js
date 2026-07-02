@@ -12,8 +12,8 @@ router.post('/create-student', verifyToken, requireRole('teacher', 'admin'), cre
 router.post('/create-teacher', verifyToken, requireRole('admin'), createTeacher);
 router.put('/profile', verifyToken, updateProfile);
 router.post('/change-password', verifyToken, changePassword);
-router.put('/:id', verifyToken, requireRole('admin'), updateUser);
-router.delete('/:id', verifyToken, requireRole('admin'), deleteUser);
+router.put('/:id', verifyToken, requireRole('teacher', 'admin'), updateUser);
+router.delete('/:id', verifyToken, requireRole('teacher', 'admin'), deleteUser);
 router.post('/:id/reset-password', verifyToken, requireRole('teacher', 'admin'), resetStudentPassword);
 router.patch('/:id/freeze', verifyToken, requireRole('teacher', 'admin'), freezeStudent);
 

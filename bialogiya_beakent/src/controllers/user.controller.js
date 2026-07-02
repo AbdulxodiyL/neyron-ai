@@ -77,14 +77,20 @@ const updateProfile = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    const { name, email, isActive, groupId, language } = req.body;
-    const user = await prisma.user.update({ where: { id: req.params.id }, data: { name, email, isActive, groupId, language } });
+    const { name, email, isActive, groupId, language, phone } = req.body;
+    const target = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!target) return error(res, 'User not found', 404);
+    if (req.user.role === 'teacher' && target.teacherId !== req.user.userId) return error(res, 'Forbidden', 403);
+    const user = await prisma.user.update({ where: { id: req.params.id }, data: { name, email, isActive, groupId, language, phone } });
     return success(res, safeUser(user));
   } catch (err) { next(err); }
 };
 
 const deleteUser = async (req, res, next) => {
   try {
+    const target = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!target) return error(res, 'User not found', 404);
+    if (req.user.role === 'teacher' && target.teacherId !== req.user.userId) return error(res, 'Forbidden', 403);
     await prisma.user.update({ where: { id: req.params.id }, data: { isActive: false } });
     return success(res, null, 'User deactivated');
   } catch (err) { next(err); }

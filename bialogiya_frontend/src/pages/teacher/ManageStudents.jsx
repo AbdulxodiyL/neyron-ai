@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Copy, RefreshCw, X, GraduationCap, Phone, Users, Star, Zap, User } from 'lucide-react';
+import { Plus, Copy, RefreshCw, X, GraduationCap, Phone, Users, Star, Zap, Pencil, Trash2, Save, ChevronRight } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,8 @@ export default function ManageStudents() {
   const [form, setForm] = useState({ name: '', groupId: '', phone: '', language: 'uz' });
   const [newCreds, setNewCreds] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [editForm, setEditForm] = useState({});
 
   const { data: students } = useQuery({
     queryKey: ['my-students'],
@@ -31,17 +33,54 @@ export default function ManageStudents() {
     onError: (e) => toast.error(e.response?.data?.message || 'Xato'),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => api.put(`/users/${id}`, data),
+    onSuccess: ({ data }) => {
+      qc.invalidateQueries(['my-students']);
+      toast.success('O\'quvchi yangilandi');
+      setEditingStudent(null);
+      if (selectedStudent?._id === data.data._id) setSelectedStudent(data.data);
+    },
+    onError: (e) => toast.error(e.response?.data?.message || 'Xato'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/users/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries(['my-students']);
+      toast.success('O\'quvchi o\'chirildi');
+      setSelectedStudent(null);
+    },
+    onError: (e) => toast.error(e.response?.data?.message || 'Xato'),
+  });
+
   const resetPwMutation = useMutation({
     mutationFn: (id) => api.post(`/users/${id}/reset-password`),
     onSuccess: ({ data }) => {
       toast.success(`Yangi parol: ${data.data.newPassword}`, { duration: 8000 });
-      if (selectedStudent) {
-        setSelectedStudent(s => s ? { ...s, _resetPw: data.data.newPassword } : s);
-      }
+      setSelectedStudent(s => s ? { ...s, _resetPw: data.data.newPassword } : s);
     },
   });
 
   const copy = (text) => { navigator.clipboard.writeText(text); toast.success('Nusxalandi!'); };
+
+  const openEdit = (s, e) => {
+    e.stopPropagation();
+    setEditingStudent(s._id);
+    setEditForm({ name: s.name, phone: s.phone || '', groupId: s.group?.id || '' });
+  };
+
+  const handleUpdate = () => {
+    if (!editForm.name) return toast.error('Ism kiritilmagan');
+    updateMutation.mutate({ id: editingStudent, data: editForm });
+  };
+
+  const handleDelete = (s, e) => {
+    e.stopPropagation();
+    if (window.confirm(`"${s.name}" ni o'chirishni tasdiqlaysizmi?`)) {
+      deleteMutation.mutate(s._id);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -54,38 +93,88 @@ export default function ManageStudents() {
 
       {/* Student list */}
       <div className="space-y-2">
-        {students?.map((s, i) => (
-          <motion.div key={s._id}
-            initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-            onClick={() => setSelectedStudent(s)}
-            className="card flex items-center gap-3 cursor-pointer hover:border-primary/30 hover:shadow-soft transition-all group">
-            <div className="w-10 h-10 gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-              {s.name?.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm text-gray-800 dark:text-white group-hover:text-primary transition-colors">
-                {s.name}
-              </div>
-              <div className="text-xs text-gray-400 flex items-center gap-2 flex-wrap">
-                <span>@{s.username}</span>
-                {s.group?.name && (
-                  <span className="flex items-center gap-0.5">
-                    <Users size={10} /> {s.group.name}
-                  </span>
-                )}
-                {s.phone && (
-                  <span className="flex items-center gap-0.5">
-                    <Phone size={10} /> {s.phone}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs flex-shrink-0">
-              <span className="badge bg-primary/10 text-primary">Lv.{s.level}</span>
-              <span className="text-gray-400">{s.xp} XP</span>
-            </div>
-          </motion.div>
-        ))}
+        {students?.map((s, i) => {
+          const isEditing = editingStudent === s._id;
+          return (
+            <motion.div key={s._id}
+              initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+              className="card">
+              {isEditing ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-primary">Tahrirlash</span>
+                    <button onClick={() => setEditingStudent(null)} className="btn-ghost p-1.5 rounded-lg"><X size={14} /></button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1 text-gray-500">Ismi *</label>
+                      <input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                        className="input-field text-sm" placeholder="To'liq ismi" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1 text-gray-500">Telefon</label>
+                      <input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                        className="input-field text-sm" placeholder="+998 90 123 45 67" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium mb-1 text-gray-500">Guruh</label>
+                    <select value={editForm.groupId} onChange={e => setEditForm(f => ({ ...f, groupId: e.target.value }))} className="input-field text-sm">
+                      <option value="">Guruhni tanlang</option>
+                      {groups?.map(g => <option key={g._id} value={g._id}>{g.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={() => setEditingStudent(null)} className="btn-ghost flex-1 text-sm">Bekor</button>
+                    <button onClick={handleUpdate} disabled={updateMutation.isPending}
+                      className="btn-primary flex-1 text-sm flex items-center justify-center gap-1.5 disabled:opacity-40">
+                      <Save size={13} />
+                      {updateMutation.isPending ? 'Saqlanmoqda...' : 'Saqlash'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 cursor-pointer group"
+                  onClick={() => setSelectedStudent(s)}>
+                  <div className="w-10 h-10 gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                    {s.name?.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-gray-800 dark:text-white group-hover:text-primary transition-colors">
+                      {s.name}
+                    </div>
+                    <div className="text-xs text-gray-400 flex items-center gap-2 flex-wrap">
+                      <span>@{s.username}</span>
+                      {s.group?.name && (
+                        <span className="flex items-center gap-0.5">
+                          <Users size={10} /> {s.group.name}
+                        </span>
+                      )}
+                      {s.phone && (
+                        <span className="flex items-center gap-0.5">
+                          <Phone size={10} /> {s.phone}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <span className="badge bg-primary/10 text-primary text-xs">Lv.{s.level}</span>
+                    <span className="text-xs text-gray-400">{s.xp} XP</span>
+                    <button onClick={(e) => openEdit(s, e)}
+                      className="btn-ghost p-1.5 rounded-lg text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" title="Tahrirlash">
+                      <Pencil size={13} />
+                    </button>
+                    <button onClick={(e) => handleDelete(s, e)}
+                      className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity" title="O'chirish">
+                      <Trash2 size={13} />
+                    </button>
+                    <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors" />
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
         {students?.length === 0 && (
           <div className="text-center py-16 text-gray-400">
             <GraduationCap size={36} className="mx-auto mb-3 opacity-30" />
@@ -104,9 +193,19 @@ export default function ManageStudents() {
               className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-sm shadow-xl">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="font-bold text-lg text-gray-800 dark:text-white">O'quvchi ma'lumoti</h2>
-                <button onClick={() => setSelectedStudent(null)} className="btn-ghost p-1.5 rounded-lg">
-                  <X size={16} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => { setEditingStudent(selectedStudent._id); setEditForm({ name: selectedStudent.name, phone: selectedStudent.phone || '', groupId: selectedStudent.group?.id || '' }); setSelectedStudent(null); }}
+                    className="btn-ghost p-1.5 rounded-lg text-primary" title="Tahrirlash">
+                    <Pencil size={15} />
+                  </button>
+                  <button onClick={() => { if (window.confirm(`"${selectedStudent.name}" ni o'chirishni tasdiqlaysizmi?`)) deleteMutation.mutate(selectedStudent._id); }}
+                    className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50" title="O'chirish">
+                    <Trash2 size={15} />
+                  </button>
+                  <button onClick={() => setSelectedStudent(null)} className="btn-ghost p-1.5 rounded-lg ml-1">
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
 
               {/* Avatar & name */}
@@ -116,6 +215,9 @@ export default function ManageStudents() {
                 </div>
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">{selectedStudent.name}</h3>
                 <span className="text-sm text-gray-400 mt-0.5">@{selectedStudent.username}</span>
+                {selectedStudent.isFrozen && (
+                  <span className="mt-2 badge bg-blue-100 text-blue-600 text-xs">❄️ Muzlatilgan</span>
+                )}
               </div>
 
               {/* Info cards */}
@@ -124,14 +226,14 @@ export default function ManageStudents() {
                   <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Phone size={16} className="text-blue-600" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="text-xs text-gray-400">Telefon raqami</div>
                     <div className="font-semibold text-sm text-gray-800 dark:text-white">
                       {selectedStudent.phone || '—'}
                     </div>
                   </div>
                   {selectedStudent.phone && (
-                    <button onClick={() => copy(selectedStudent.phone)} className="ml-auto btn-ghost p-1.5 rounded-lg">
+                    <button onClick={() => copy(selectedStudent.phone)} className="btn-ghost p-1.5 rounded-lg">
                       <Copy size={13} />
                     </button>
                   )}
@@ -167,7 +269,7 @@ export default function ManageStudents() {
                 </div>
               </div>
 
-              {/* Reset password */}
+              {/* Reset password result */}
               {selectedStudent._resetPw && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 flex items-center justify-between">
                   <div>
