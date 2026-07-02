@@ -27,6 +27,7 @@ model User {
   passwordHash     String
   role             Role      @default(student)
   avatar           String?
+  phone            String?
   language         Language  @default(uz)
   xp               Int       @default(0)
   coins            Int       @default(0)

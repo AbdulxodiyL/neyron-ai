@@ -43,7 +43,7 @@ const getGroupById = async (req, res, next) => {
         teacher: { select: { id: true, name: true } },
         students: {
           where: { isActive: true },
-          select: { id: true, name: true, username: true, xp: true, level: true, isFrozen: true, lastLogin: true },
+          select: { id: true, name: true, username: true, xp: true, level: true, isFrozen: true, lastLogin: true, phone: true },
           orderBy: { name: 'asc' },
         },
         _count: { select: { students: true } },

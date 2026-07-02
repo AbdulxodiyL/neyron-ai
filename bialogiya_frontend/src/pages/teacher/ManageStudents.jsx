@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 export default function ManageStudents() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', groupId: '', email: '', language: 'uz' });
+  const [form, setForm] = useState({ name: '', groupId: '', email: '', phone: '', language: 'uz' });
   const [newCreds, setNewCreds] = useState(null);
 
   const { data: students } = useQuery({ queryKey: ['my-students'], queryFn: () => api.get('/users/my-students').then(r => r.data.data) });
@@ -76,7 +76,9 @@ export default function ManageStudents() {
                       <option value="">Select group</option>
                       {groups?.map(g => <option key={g._id} value={g._id}>{g.name}</option>)}
                     </select></div>
-                  <div><label className="block text-sm font-medium mb-1.5">Language</label>
+                  <div><label className="block text-sm font-medium mb-1.5">Telefon raqami</label>
+                    <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+998 90 123 45 67" type="tel" className="input-field" /></div>
+                  <div><label className="block text-sm font-medium mb-1.5">Til</label>
                     <select value={form.language} onChange={e => setForm(f => ({ ...f, language: e.target.value }))} className="input-field">
                       <option value="uz">O'zbek</option><option value="ru">Русский</option><option value="en">English</option>
                     </select></div>

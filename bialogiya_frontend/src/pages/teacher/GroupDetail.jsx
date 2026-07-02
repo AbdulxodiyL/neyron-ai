@@ -29,6 +29,7 @@ export default function GroupDetail() {
   const [monthOffset, setMonthOffset] = useState(0);
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentPhone, setNewStudentPhone] = useState('');
   const [newStudentLang, setNewStudentLang] = useState('uz');
   const [newCreds, setNewCreds] = useState(null);
 
@@ -81,6 +82,7 @@ export default function GroupDetail() {
       qc.invalidateQueries(['group', id]);
       setNewCreds(data.data.credentials);
       setNewStudentName('');
+      setNewStudentPhone('');
     },
     onError: (e) => toast.error(e.response?.data?.message || 'Xato'),
   });
@@ -218,7 +220,10 @@ export default function GroupDetail() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-sm text-gray-800 dark:text-white">{s.name}</div>
-                <div className="text-xs text-gray-400">@{s.username} • Lv.{s.level} • {s.xp} XP</div>
+                <div className="text-xs text-gray-400">
+                  @{s.username} • Lv.{s.level} • {s.xp} XP
+                  {s.phone && <span className="ml-1">• 📞 {s.phone}</span>}
+                </div>
               </div>
               {s.isFrozen && (
                 <span className="badge bg-blue-100 text-blue-600 text-xs">❄ Muzlatilgan</span>
@@ -292,6 +297,11 @@ export default function GroupDetail() {
                       placeholder="O'quvchi ismi" className="input-field" />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium mb-1.5">Telefon raqami</label>
+                    <input value={newStudentPhone} onChange={e => setNewStudentPhone(e.target.value)}
+                      placeholder="+998 90 123 45 67" type="tel" className="input-field" />
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium mb-1.5">Til</label>
                     <select value={newStudentLang} onChange={e => setNewStudentLang(e.target.value)} className="input-field">
                       <option value="uz">O'zbek</option>
@@ -302,7 +312,7 @@ export default function GroupDetail() {
                   <div className="flex gap-3 pt-2">
                     <button onClick={() => setShowAddStudent(false)} className="btn-ghost flex-1">Bekor</button>
                     <button
-                      onClick={() => newStudentName && createStudentMutation.mutate({ name: newStudentName, groupId: id, language: newStudentLang })}
+                      onClick={() => newStudentName && createStudentMutation.mutate({ name: newStudentName, groupId: id, language: newStudentLang, phone: newStudentPhone || undefined })}
                       disabled={!newStudentName || createStudentMutation.isPending}
                       className="btn-primary flex-1 disabled:opacity-40">
                       {createStudentMutation.isPending ? 'Qo\'shilmoqda...' : 'Qo\'shish'}

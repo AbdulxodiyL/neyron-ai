@@ -1,5 +1,6 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
 const allowedMimes = [
@@ -20,6 +21,7 @@ const storage = multer.diskStorage({
     if (url.includes('lesson')) folder = 'uploads/lessons';
     else if (url.includes('homework') && url.includes('submit')) folder = 'uploads/submissions';
     else if (url.includes('homework')) folder = 'uploads/homework';
+    fs.mkdirSync(folder, { recursive: true });
     cb(null, folder);
   },
   filename: (req, file, cb) => {
@@ -40,4 +42,15 @@ const maxSize = parseInt(process.env.MAX_FILE_SIZE_MB || '50') * 1024 * 1024;
 
 const upload = multer({ storage, fileFilter, limits: { fileSize: maxSize } });
 
+// Memory storage for PDF processing (no disk write needed)
+const pdfUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('Only PDF files are allowed'), false);
+  },
+  limits: { fileSize: maxSize },
+});
+
 module.exports = upload;
+module.exports.pdfUpload = pdfUpload;

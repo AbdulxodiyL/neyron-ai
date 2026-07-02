@@ -11,7 +11,7 @@ const safeUser = (u) => {
 
 const createStudent = async (req, res, next) => {
   try {
-    const { name, groupId, language } = req.body;
+    const { name, groupId, language, phone } = req.body;
     if (!name || !groupId) return error(res, 'Name and group required', 400);
 
     const group = await prisma.group.findUnique({ where: { id: groupId } });
@@ -22,7 +22,7 @@ const createStudent = async (req, res, next) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { name, username, passwordHash, role: 'student', language: language || 'uz', groupId, teacherId: group.teacherId },
+      data: { name, username, passwordHash, role: 'student', language: language || 'uz', groupId, teacherId: group.teacherId, phone: phone || null },
     });
 
     return success(res, { user: safeUser(user), credentials: { username, password } }, 'Student created', 201);

@@ -16,6 +16,11 @@ const runMigrations = async () => {
       ALTER TABLE "Resource" ADD COLUMN IF NOT EXISTS "fileUrl" TEXT
     `);
 
+    // Add phone to User if missing
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT
+    `);
+
     // Create Payment table if missing
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "Payment" (
