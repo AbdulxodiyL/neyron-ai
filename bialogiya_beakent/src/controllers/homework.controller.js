@@ -8,8 +8,16 @@ const createHomework = async (req, res, next) => {
 
     const attachments = (req.files || []).map(f => ({ name: f.originalname, path: f.path, type: f.mimetype }));
 
+    // Normalize and validate maxScore (Prisma expects an Int)
+    let parsedMaxScore = 100;
+    if (maxScore !== undefined && maxScore !== null && maxScore !== '') {
+      const n = parseInt(maxScore, 10);
+      if (Number.isNaN(n)) return error(res, 'Invalid maxScore value; must be a number', 400);
+      parsedMaxScore = n;
+    }
+
     const hw = await prisma.homework.create({
-      data: { title, description, groupId, lessonId: lessonId || null, teacherId: req.user.userId, dueDate: new Date(dueDate), maxScore: maxScore || 100, attachments },
+      data: { title, description, groupId, lessonId: lessonId || null, teacherId: req.user.userId, dueDate: new Date(dueDate), maxScore: parsedMaxScore, attachments },
       include: { group: { select: { id: true, name: true } }, teacher: { select: { id: true, name: true } } },
     });
     return success(res, hw, 'Homework created', 201);
