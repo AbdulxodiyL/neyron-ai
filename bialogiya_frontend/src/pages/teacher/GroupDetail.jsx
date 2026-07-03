@@ -33,6 +33,7 @@ export default function GroupDetail() {
   const [newStudentPhone, setNewStudentPhone] = useState('');
   const [newStudentLang, setNewStudentLang] = useState('uz');
   const [newCreds, setNewCreds] = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
 
   const month = getMonthStr(monthOffset);
 
@@ -162,53 +163,8 @@ export default function GroupDetail() {
           </div>
         )}
 
-        {/* Student payment list */}
-        <div className="space-y-2">
-          {(payments || students.map(s => ({ ...s, isPaid: false }))).map((p) => {
-            const paidAt = p.payment?.paidAt ? new Date(p.payment.paidAt).toLocaleDateString() : null;
-            return (
-              <motion.div key={p.id} layout
-                className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-                {/* Avatar */}
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-semibold text-sm flex-shrink-0
-                  ${p.isFrozen ? 'bg-blue-400' : 'gradient-bg'}`}>
-                  {p.isFrozen ? '❄️' : p.name?.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-gray-800 dark:text-white truncate">
-                    {p.name} {p.isFrozen && <span className="text-xs text-blue-400">❄ muzlatilgan</span>}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    @{p.username}{paidAt ? ` • Oxirgi to'lov: ${paidAt}` : ''}
-                  </div>
-                </div>
-                {/* Payment toggle */}
-                <button
-                  onClick={() =>
-                    paymentMutation.mutate({
-                      studentId: p.id,
-                      isPaid: !p.isPaid,
-                    })
-                  }
-                  disabled={paymentMutation.isPending}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    p.isPaid
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                      : 'bg-red-100 text-red-600 hover:bg-red-200'
-                  }`}
-                >
-                  {p.isPaid ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
-                  {p.isPaid ? "To'landi" : "To'lanmadi"}
-                </button>
-              </motion.div>
-            );
-          })}
-          {students.length === 0 && (
-            <div className="text-center py-6 text-gray-400 text-sm">
-              <Users size={28} className="mx-auto mb-2 opacity-30" />
-              Hali o'quvchilar yo'q
-            </div>
-          )}
+        <div className="text-sm text-gray-500">
+          O'quvchini pastdan tanlang — u yerda oylik to'lov, muzlatish va parolni reset qilish bir joyda ko'rinadi.
         </div>
       </div>
 
@@ -221,47 +177,76 @@ export default function GroupDetail() {
         </h2>
 
         <div className="space-y-2">
-          {students.map((s, i) => (
-            <motion.div key={s._id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-              className={`flex items-center gap-3 p-3 rounded-xl border transition-all
-                ${s.isFrozen
-                  ? 'border-blue-200 bg-blue-50 dark:bg-blue-900/10'
-                  : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'}`}>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0
-                ${s.isFrozen ? 'bg-blue-400' : 'gradient-bg'}`}>
-                {s.isFrozen ? '❄️' : s.name?.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm text-gray-800 dark:text-white">{s.name}</div>
-                <div className="text-xs text-gray-400">
-                  @{s.username} • Lv.{s.level} • {s.xp} XP
-                  {s.phone && <span className="ml-1">• 📞 {s.phone}</span>}
-                </div>
-              </div>
-              {s.isFrozen && (
-                <span className="badge bg-blue-100 text-blue-600 text-xs">❄ Muzlatilgan</span>
-              )}
-              {/* Actions */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => freezeMutation.mutate(s._id)}
-                  disabled={freezeMutation.isPending}
-                  title={s.isFrozen ? 'Faollashtirish' : 'Muzlatish'}
-                  className={`p-2 rounded-lg transition-all text-xs
-                    ${s.isFrozen
-                      ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                      : 'bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-blue-600 dark:bg-gray-700'}`}>
-                  <Snowflake size={14} />
+          {students.map((s, i) => {
+            const payment = paymentMap[s._id] || {};
+            const isPaid = payment.isPaid;
+            const paidAt = payment.payment?.paidAt ? new Date(payment.payment.paidAt).toLocaleDateString() : null;
+            const isSelected = selectedStudentId === s._id;
+            return (
+              <motion.div key={s._id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+                className={`rounded-xl border transition-all ${isSelected ? 'border-primary/40 bg-primary/5' : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'}`}>
+                <button type="button" onClick={() => setSelectedStudentId(isSelected ? null : s._id)}
+                  className="w-full text-left p-3 flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0
+                    ${s.isFrozen ? 'bg-blue-400' : 'gradient-bg'}`}>
+                    {s.isFrozen ? '❄️' : s.name?.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-gray-800 dark:text-white">{s.name}</div>
+                    <div className="text-xs text-gray-400 flex flex-wrap gap-2">
+                      <span>@{s.username}</span>
+                      <span>Lv.{s.level}</span>
+                      <span>{s.xp} XP</span>
+                      {s.phone && <span>📞 {s.phone}</span>}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2 items-center text-xs">
+                      <span className={`px-2 py-1 rounded-full ${isPaid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                        {isPaid ? "To'landi" : "To'lanmadi"}
+                      </span>
+                      {paidAt && <span className="text-gray-400">Oxirgi to'lov: {paidAt}</span>}
+                      {s.isFrozen && <span className="text-blue-500">Muzlatilgan</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); freezeMutation.mutate(s._id); }}
+                      disabled={freezeMutation.isPending}
+                      title={s.isFrozen ? 'Faollashtirish' : 'Muzlatish'}
+                      className={`p-2 rounded-lg transition-all ${s.isFrozen ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' : 'bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-blue-600 dark:bg-gray-700'}`}>
+                      <Snowflake size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); if (window.confirm('Parolni yangilash?')) resetPwMutation.mutate(s._id); }}
+                      className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-primary/10 hover:text-primary transition-all"
+                      title="Kodni restart qilish">
+                      <RefreshCw size={14} />
+                    </button>
+                  </div>
                 </button>
-                <button
-                  onClick={() => { if (window.confirm('Parolni yangilash?')) resetPwMutation.mutate(s._id); }}
-                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-primary/10 hover:text-primary transition-all"
-                  title="Parolni yangilash">
-                  <RefreshCw size={14} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+                {isSelected && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900 rounded-b-xl">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <button
+                        onClick={() => paymentMutation.mutate({ studentId: s._id, isPaid: !isPaid })}
+                        disabled={paymentMutation.isPending}
+                        className={`btn-sm ${isPaid ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'}`}>
+                        {isPaid ? "To'lovni qaytarish" : "To'lovni belgilash"}
+                      </button>
+                      <button
+                        onClick={() => removePaymentMutation.mutate(s._id)}
+                        disabled={removePaymentMutation.isPending}
+                        className="btn-ghost text-xs text-gray-500 hover:text-gray-700">
+                        To'lovni o'chirish
+                      </button>
+                    </div>
+                    <div className="mt-3 text-sm text-gray-500">
+                      Ushbu o'quvchiga tegishli barcha boshqaruvlar shu yerda: oylik to'lov, muzlatish va kodni restart qilish.
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
           {students.length === 0 && (
             <div className="text-center py-10 text-gray-400">
               <Users size={32} className="mx-auto mb-2 opacity-30" />

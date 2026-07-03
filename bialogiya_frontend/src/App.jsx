@@ -95,6 +95,7 @@ export default function App() {
           <Route path="students" element={<ManageStudents />} />
           <Route path="lessons" element={<ManageLessons />} />
           <Route path="lessons/create" element={<CreateLesson />} />
+          <Route path="lessons/:id/edit" element={<CreateLesson />} />
           <Route path="homework" element={<ManageHomework />} />
           <Route path="homework/create" element={<CreateHomework />} />
           <Route path="homework/:id/submissions" element={<GradeSubmissions />} />

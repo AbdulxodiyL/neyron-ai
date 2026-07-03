@@ -50,7 +50,7 @@ export default function GradeSubmissions() {
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-sm text-gray-700 dark:text-gray-300 mb-3">
-              {sub.content || <span className="text-gray-400 italic">No text answer</span>}
+              {sub.answerText || <span className="text-gray-400 italic">No text answer</span>}
             </div>
 
             {sub.aiGrade && (

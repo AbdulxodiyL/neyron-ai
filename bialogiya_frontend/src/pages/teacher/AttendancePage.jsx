@@ -16,6 +16,7 @@ export default function AttendancePage() {
 
   const { data: groups } = useQuery({ queryKey: ['my-groups'], queryFn: () => api.get('/groups').then(r => r.data.data) });
   const group = groups?.find(g => g._id === selectedGroup);
+  const activeStudents = group?.students?.filter(s => !s.isFrozen) || [];
 
   const { data: existingRecords } = useQuery({
     queryKey: ['attendance', selectedGroup, date],
@@ -26,7 +27,7 @@ export default function AttendancePage() {
       if (dayRecord?.records?.length) {
         dayRecord.records.forEach(rec => { map[rec.studentId] = rec.status; });
       } else {
-        group?.students?.forEach(s => { map[s._id] = 'present'; });
+        activeStudents.forEach(s => { map[s._id] = 'present'; });
       }
       setAttendance(map);
       return dayRecord;
@@ -38,10 +39,10 @@ export default function AttendancePage() {
     mutationFn: () => api.post('/attendance', {
       groupId: selectedGroup,
       date,
-      records: group?.students?.map(student => ({
+      records: activeStudents.map(student => ({
         studentId: student._id,
-        status: student.isFrozen ? 'absent' : (attendance[student._id] || 'present'),
-      })) || [],
+        status: attendance[student._id] || 'present',
+      })),
     }),
     onSuccess: () => { qc.invalidateQueries(['attendance']); toast.success('Attendance saved!'); },
     onError: (e) => toast.error(e.response?.data?.message || 'Error'),
@@ -74,7 +75,7 @@ export default function AttendancePage() {
       {selectedGroup && group && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <div className="text-sm text-gray-600"><span className="font-semibold text-primary">{presentCount}</span> / {group.students?.length || 0} present</div>
+            <div className="text-sm text-gray-600"><span className="font-semibold text-primary">{presentCount}</span> / {activeStudents.length || 0} present</div>
             <div className="flex gap-2">
               {['present', 'late', 'absent'].map(s => (
                 <button key={s} onClick={() => setAll(s)} className={`text-xs px-2.5 py-1 rounded-lg border font-medium ${STATUS_INFO[s].color}`}>
@@ -85,8 +86,8 @@ export default function AttendancePage() {
           </div>
 
           <div className="space-y-2 mb-4">
-            {group.students?.map((student, i) => {
-              const current = attendance[student._id] || (student.isFrozen ? 'absent' : 'present');
+            {activeStudents.map((student, i) => {
+              const current = attendance[student._id] || 'present';
               return (
                 <motion.div key={student._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                   className="card flex items-center gap-3 py-3">

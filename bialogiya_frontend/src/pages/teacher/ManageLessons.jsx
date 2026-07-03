@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Plus, BookOpen, Trash2, RefreshCw, Eye } from 'lucide-react';
+import { Plus, BookOpen, Trash2, RefreshCw, Eye, Pencil } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
 import { formatDate } from '../../utils/format';
@@ -45,6 +45,7 @@ export default function ManageLessons() {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <Link to={`/teacher/lessons/${l._id}/edit`} className="btn-ghost p-1.5 rounded-lg text-primary hover:bg-primary/10" title="Edit lesson"><Pencil size={14} /></Link>
               {(l.aiContent?.status === 'error' || l.aiContent?.status === 'pending') && (
                 <button onClick={() => regenMutation.mutate(l._id)} className="btn-ghost p-1.5 rounded-lg text-secondary hover:text-secondary"><RefreshCw size={14} /></button>
               )}

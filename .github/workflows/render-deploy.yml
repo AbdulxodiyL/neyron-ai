@@ -1,0 +1,32 @@
+name: Render Deploy
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Trigger Render Deploys
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Trigger Render deploys
+        env:
+          RENDER_API_TOKEN: ${{ secrets.RENDER_API_TOKEN }}
+        run: |
+          if [ -z "$RENDER_API_TOKEN" ]; then
+            echo "ERROR: RENDER_API_TOKEN secret is required."
+            exit 1
+          fi
+          node ./scripts/trigger_render_deploys.js "$RENDER_API_TOKEN"
