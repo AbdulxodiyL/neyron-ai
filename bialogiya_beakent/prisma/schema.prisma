@@ -251,6 +251,8 @@ model Resource {
   description String?
   filePath    String
   fileUrl     String?
+  fileData    Bytes?
+  mimeType    String?
   type        String   @default("other")
   downloads   Int      @default(0)
   isActive    Boolean  @default(true)

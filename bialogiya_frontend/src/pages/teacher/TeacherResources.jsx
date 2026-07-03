@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Plus, Upload, FileText, Image, Video, Trash2, X } from 'lucide-react';
+import { Plus, Upload, FileText, Image, Video, Trash2, X, Download, Loader2 } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
 
@@ -26,6 +26,21 @@ export default function TeacherResources() {
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/resources/${id}`),
     onSuccess: () => { qc.invalidateQueries(['resources']); toast.success('Deleted'); },
+  });
+
+  const downloadMutation = useMutation({
+    mutationFn: async (r) => {
+      const res = await api.post(`/resources/${r._id}/download`, null, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = r.filePath || r.title;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    },
+    onError: () => toast.error('Faylni yuklab bo\'lmadi'),
   });
 
   const handleUpload = () => {
@@ -82,6 +97,7 @@ export default function TeacherResources() {
         {resources?.map((r, i) => {
           const type = getType(r);
           const Icon = TYPE_ICONS[type];
+          const isDownloading = downloadMutation.isPending && downloadMutation.variables?._id === r._id;
           return (
             <motion.div key={r._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
               className="card flex items-start gap-3">
@@ -92,8 +108,14 @@ export default function TeacherResources() {
                 <div className="font-semibold text-sm truncate">{r.title}</div>
                 <div className="text-xs text-gray-400 mt-0.5">{r.group?.name || 'All groups'} • {r.downloads || 0} downloads</div>
               </div>
-              <button onClick={() => { if (window.confirm('Delete?')) deleteMutation.mutate(r._id); }}
-                className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50 flex-shrink-0"><Trash2 size={13} /></button>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button onClick={() => downloadMutation.mutate(r)} disabled={isDownloading}
+                  className="btn-ghost p-1.5 rounded-lg text-primary hover:bg-primary/10 disabled:opacity-50">
+                  {isDownloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                </button>
+                <button onClick={() => { if (window.confirm('Delete?')) deleteMutation.mutate(r._id); }}
+                  className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50"><Trash2 size={13} /></button>
+              </div>
             </motion.div>
           );
         })}

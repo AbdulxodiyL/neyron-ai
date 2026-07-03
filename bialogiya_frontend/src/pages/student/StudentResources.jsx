@@ -1,8 +1,9 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { FolderOpen, Download, ExternalLink, FileText, Image, Video } from 'lucide-react';
+import { FolderOpen, Download, ExternalLink, FileText, Image, Video, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../config/axios';
+import toast from 'react-hot-toast';
 
 const TYPE_ICONS = { pdf: FileText, image: Image, video: Video, ppt: FileText, word: FileText, link: ExternalLink, other: FileText };
 const TYPE_COLORS = { pdf: 'text-red-500 bg-red-50', image: 'text-blue-500 bg-blue-50', video: 'text-purple-500 bg-purple-50', ppt: 'text-orange-500 bg-orange-50', link: 'text-green-500 bg-green-50', other: 'text-gray-500 bg-gray-50' };
@@ -15,7 +16,20 @@ export default function StudentResources() {
     enabled: !!user?.groupId,
   });
 
-  const trackDownload = useMutation({ mutationFn: (id) => api.post(`/resources/${id}/download`) });
+  const downloadMutation = useMutation({
+    mutationFn: async (r) => {
+      const res = await api.post(`/resources/${r._id}/download`, null, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = r.filePath || r.title;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    },
+    onError: () => toast.error('Faylni yuklab bo\'lmadi'),
+  });
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -24,8 +38,7 @@ export default function StudentResources() {
         {resources?.map((r, i) => {
           const Icon = TYPE_ICONS[r.type] || FileText;
           const color = TYPE_COLORS[r.type] || TYPE_COLORS.other;
-          const backendBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
-          const url = r.filePath ? `${backendBase}${r.filePath}` : r.fileUrl;
+          const isDownloading = downloadMutation.isPending && downloadMutation.variables?._id === r._id;
           return (
             <motion.div key={r._id} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}
               className="card hover:shadow-glow hover:border-primary/20 transition-all">
@@ -36,12 +49,10 @@ export default function StudentResources() {
               {r.description && <p className="text-xs text-gray-500 mb-3 line-clamp-2">{r.description}</p>}
               <div className="flex items-center justify-between">
                 <span className="badge text-xs bg-gray-100 text-gray-600">{(r.type || 'file').toUpperCase()}</span>
-                {url && (
-                  <a href={url} target="_blank" rel="noreferrer" onClick={() => trackDownload.mutate(r._id)}
-                    className="btn-ghost text-xs py-1 px-2 flex items-center gap-1 text-primary">
-                    <Download size={12} /> Get
-                  </a>
-                )}
+                <button onClick={() => downloadMutation.mutate(r)} disabled={isDownloading}
+                  className="btn-ghost text-xs py-1 px-2 flex items-center gap-1 text-primary disabled:opacity-50">
+                  {isDownloading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />} Get
+                </button>
               </div>
             </motion.div>
           );

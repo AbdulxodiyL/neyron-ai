@@ -5,7 +5,7 @@ const upload = require('../middleware/upload.middleware');
 const { uploadResource, getResources, downloadResource, deleteResource } = require('../controllers/resource.controller');
 
 router.get('/', verifyToken, getResources);
-router.post('/', verifyToken, requireRole('teacher', 'admin'), upload.single('file'), uploadResource);
+router.post('/', verifyToken, requireRole('teacher', 'admin'), upload.resourceUpload.single('file'), uploadResource);
 router.post('/:id/download', verifyToken, downloadResource);
 router.delete('/:id', verifyToken, requireRole('teacher', 'admin'), deleteResource);
 

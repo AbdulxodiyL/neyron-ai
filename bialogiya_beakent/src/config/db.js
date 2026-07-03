@@ -16,6 +16,15 @@ const runMigrations = async () => {
       ALTER TABLE "Resource" ADD COLUMN IF NOT EXISTS "fileUrl" TEXT
     `);
 
+    // Add fileData/mimeType to Resource if missing (store file bytes in DB —
+    // Render's free web service disk is ephemeral and wipes uploads on restart)
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "Resource" ADD COLUMN IF NOT EXISTS "fileData" BYTEA
+    `);
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "Resource" ADD COLUMN IF NOT EXISTS "mimeType" TEXT
+    `);
+
     // Add phone to User if missing
     await prisma.$executeRawUnsafe(`
       ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT

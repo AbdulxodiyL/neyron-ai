@@ -60,6 +60,15 @@ const fileUpload = multer({
   limits: { fileSize: maxSize },
 });
 
+// Memory storage for Resources — Render's free web service disk is ephemeral
+// (wiped on every restart/deploy), so uploaded files are stored as DB bytes instead.
+const resourceUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter,
+  limits: { fileSize: maxSize },
+});
+
 module.exports = upload;
 module.exports.pdfUpload = fileUpload;
 module.exports.fileUpload = fileUpload;
+module.exports.resourceUpload = resourceUpload;

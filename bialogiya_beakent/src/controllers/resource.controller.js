@@ -11,7 +11,21 @@ const uploadResource = async (req, res, next) => {
     const type = typeMap[ext] || 'other';
 
     const resource = await prisma.resource.create({
-      data: { title: title || req.file.originalname, description, filePath: req.file.path, type, groupId: groupId || null, teacherId: req.user.userId },
+      data: {
+        title: title || req.file.originalname,
+        description,
+        filePath: req.file.originalname,
+        fileData: req.file.buffer,
+        mimeType: req.file.mimetype,
+        type,
+        groupId: groupId || null,
+        teacherId: req.user.userId,
+      },
+      select: {
+        id: true, title: true, description: true, filePath: true, fileUrl: true,
+        mimeType: true, type: true, downloads: true, isActive: true, createdAt: true,
+        groupId: true, teacherId: true,
+      },
     });
     return success(res, resource, 'Uploaded', 201);
   } catch (err) { next(err); }
@@ -25,7 +39,12 @@ const getResources = async (req, res, next) => {
     else if (req.user.role === 'teacher') where.teacherId = req.user.userId;
     const resources = await prisma.resource.findMany({
       where, orderBy: { createdAt: 'desc' },
-      include: { teacher: { select: { id: true, name: true } }, group: { select: { id: true, name: true } } },
+      select: {
+        id: true, title: true, description: true, filePath: true, fileUrl: true,
+        mimeType: true, type: true, downloads: true, isActive: true, createdAt: true,
+        groupId: true, teacherId: true,
+        teacher: { select: { id: true, name: true } }, group: { select: { id: true, name: true } },
+      },
     });
     return success(res, resources);
   } catch (err) { next(err); }
@@ -35,8 +54,11 @@ const downloadResource = async (req, res, next) => {
   try {
     const resource = await prisma.resource.findUnique({ where: { id: req.params.id } });
     if (!resource) return error(res, 'Not found', 404);
+    if (!resource.fileData) return error(res, 'File data unavailable — re-upload this resource', 404);
     await prisma.resource.update({ where: { id: resource.id }, data: { downloads: { increment: 1 } } });
-    res.download(resource.filePath);
+    res.set('Content-Type', resource.mimeType || 'application/octet-stream');
+    res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(resource.filePath || resource.title)}"`);
+    res.send(Buffer.from(resource.fileData));
   } catch (err) { next(err); }
 };
 
