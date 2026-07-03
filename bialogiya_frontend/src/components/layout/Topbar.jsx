@@ -195,6 +195,12 @@ export default function Topbar({ onMenuClick }) {
                   <span className={`badge text-xs mt-1 ${user?.role === 'teacher' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
                     {user?.role === 'teacher' ? 'O\'qituvchi' : user?.role === 'admin' ? 'Admin' : 'O\'quvchi'}
                   </span>
+                  {user?.isFrozen && (
+                    <div className="mt-2 text-xs text-blue-600 dark:text-blue-300">❄️ Hisobingiz muzlatilgan</div>
+                  )}
+                  {user?.lastPaymentAt && (
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">Oxirgi to'lov: {new Date(user.lastPaymentAt).toLocaleDateString()}</div>
+                  )}
                 </div>
                 {/* Change password */}
                 <button

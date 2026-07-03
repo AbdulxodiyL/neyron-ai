@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 import api from '../../config/axios';
 
 const STATUS_CONFIG = {
@@ -10,6 +11,7 @@ const STATUS_CONFIG = {
 };
 
 export default function StudentAttendance() {
+  const { user } = useAuthStore();
   const { data: records, isLoading } = useQuery({
     queryKey: ['student-attendance'],
     queryFn: () => api.get('/attendance/my').then(r => r.data.data),
@@ -22,6 +24,11 @@ export default function StudentAttendance() {
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Attendance</h1>
+      {user?.isFrozen && (
+        <div className="mb-4 rounded-3xl border border-blue-200 bg-blue-50 p-4 text-blue-700">
+          ❄️ Sizning hisobingiz muzlatilgan. Iltimos, o'qituvchingiz bilan bog'laning.
+        </div>
+      )}
       {total > 0 && (
         <div className="flex gap-4 mb-6">
           <div className="card flex-1 text-center py-4">

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, BookOpen, ClipboardList, FileText, BarChart2,
   Users, FolderOpen, Calendar, Trophy, Star, Settings,
-  GraduationCap, BookMarked, UserCheck, Upload, Award
+  GraduationCap, BookMarked, UserCheck, Upload, 
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { getLevelProgress } from '../../utils/format';
@@ -144,7 +144,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         )}
         <div className="text-xs text-center text-gray-400">
-          © 2024 {t('app_name')}
+          © 2026 {t('app_name')}
         </div>
       </div>
     </aside>

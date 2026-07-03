@@ -19,6 +19,12 @@ const login = async (req, res, next) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return error(res, 'Invalid credentials', 401);
 
+    const lastPayment = await prisma.payment.findFirst({
+      where: { studentId: user.id, isPaid: true },
+      orderBy: { paidAt: 'desc' },
+      select: { paidAt: true },
+    });
+
     const { accessToken, refreshToken } = generateTokens(user.id, user.role);
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
 
@@ -28,7 +34,11 @@ const login = async (req, res, next) => {
     });
 
     const { passwordHash, refreshTokenHash: _rth, ...safeUser } = user;
-    const userOut = { ...safeUser, streak: { current: safeUser.streakCurrent, longest: safeUser.streakLongest, lastActiveDate: safeUser.streakLastDate } };
+    const userOut = {
+      ...safeUser,
+      streak: { current: safeUser.streakCurrent, longest: safeUser.streakLongest, lastActiveDate: safeUser.streakLastDate },
+      lastPaymentAt: lastPayment?.paidAt?.toISOString() || null,
+    };
     return success(res, { user: userOut, accessToken, refreshToken });
   } catch (err) {
     next(err);
@@ -75,14 +85,23 @@ const getMe = async (req, res, next) => {
         id: true, name: true, username: true, email: true, role: true,
         avatar: true, language: true, xp: true, coins: true, level: true,
         streakCurrent: true, streakLongest: true, streakLastDate: true,
-        achievements: true, isActive: true, lastLogin: true, createdAt: true,
+        achievements: true, isActive: true, isFrozen: true, lastLogin: true, createdAt: true,
         groupId: true, teacherId: true,
         group: { select: { id: true, name: true, subject: true } },
         teacher: { select: { id: true, name: true } },
       },
     });
     if (!user) return error(res, 'User not found', 404);
-    const userOut = { ...user, streak: { current: user.streakCurrent, longest: user.streakLongest, lastActiveDate: user.streakLastDate } };
+    const lastPayment = await prisma.payment.findFirst({
+      where: { studentId: user.id, isPaid: true },
+      orderBy: { paidAt: 'desc' },
+      select: { paidAt: true },
+    });
+    const userOut = {
+      ...user,
+      streak: { current: user.streakCurrent, longest: user.streakLongest, lastActiveDate: user.streakLastDate },
+      lastPaymentAt: lastPayment?.paidAt?.toISOString() || null,
+    };
     return success(res, userOut);
   } catch (err) {
     next(err);

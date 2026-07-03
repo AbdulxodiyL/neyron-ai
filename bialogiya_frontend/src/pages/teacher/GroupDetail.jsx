@@ -164,20 +164,24 @@ export default function GroupDetail() {
 
         {/* Student payment list */}
         <div className="space-y-2">
-          {(payments || students.map(s => ({ ...s, isPaid: false }))).map((p) => (
-            <motion.div key={p.id} layout
-              className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
-              {/* Avatar */}
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-semibold text-sm flex-shrink-0
-                ${p.isFrozen ? 'bg-blue-400' : 'gradient-bg'}`}>
-                {p.isFrozen ? '❄️' : p.name?.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm text-gray-800 dark:text-white truncate">
-                  {p.name} {p.isFrozen && <span className="text-xs text-blue-400">❄ muzlatilgan</span>}
+          {(payments || students.map(s => ({ ...s, isPaid: false }))).map((p) => {
+            const paidAt = p.payment?.paidAt ? new Date(p.payment.paidAt).toLocaleDateString() : null;
+            return (
+              <motion.div key={p.id} layout
+                className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800">
+                {/* Avatar */}
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-semibold text-sm flex-shrink-0
+                  ${p.isFrozen ? 'bg-blue-400' : 'gradient-bg'}`}>
+                  {p.isFrozen ? '❄️' : p.name?.charAt(0)}
                 </div>
-                <div className="text-xs text-gray-400">@{p.username}</div>
-              </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm text-gray-800 dark:text-white truncate">
+                    {p.name} {p.isFrozen && <span className="text-xs text-blue-400">❄ muzlatilgan</span>}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    @{p.username}{paidAt ? ` • Oxirgi to'lov: ${paidAt}` : ''}
+                  </div>
+                </div>
               {/* Payment toggle */}
               <button
                 onClick={() => paymentMutation.mutate({ studentId: p.id, isPaid: !p.isPaid })}

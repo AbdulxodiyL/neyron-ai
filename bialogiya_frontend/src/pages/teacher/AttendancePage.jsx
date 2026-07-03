@@ -35,7 +35,14 @@ export default function AttendancePage() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: () => api.post('/attendance', { groupId: selectedGroup, date, records: Object.entries(attendance).map(([studentId, status]) => ({ studentId, status })) }),
+    mutationFn: () => api.post('/attendance', {
+      groupId: selectedGroup,
+      date,
+      records: group?.students?.map(student => ({
+        studentId: student._id,
+        status: student.isFrozen ? 'absent' : (attendance[student._id] || 'present'),
+      })) || [],
+    }),
     onSuccess: () => { qc.invalidateQueries(['attendance']); toast.success('Attendance saved!'); },
     onError: (e) => toast.error(e.response?.data?.message || 'Error'),
   });
@@ -79,14 +86,19 @@ export default function AttendancePage() {
 
           <div className="space-y-2 mb-4">
             {group.students?.map((student, i) => {
-              const current = attendance[student._id] || 'present';
+              const current = attendance[student._id] || (student.isFrozen ? 'absent' : 'present');
               return (
                 <motion.div key={student._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                   className="card flex items-center gap-3 py-3">
                   <div className="w-8 h-8 gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
                     {student.name?.charAt(0)}
                   </div>
-                  <span className="flex-1 font-medium text-sm">{student.name}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-gray-900 dark:text-white">{student.name}</div>
+                    {student.isFrozen && (
+                      <div className="text-xs text-blue-600 dark:text-blue-300">❄️ Muzlatilgan</div>
+                    )}
+                  </div>
                   <div className="flex gap-1.5">
                     {['present', 'late', 'absent'].map(s => {
                       const info = STATUS_INFO[s];
@@ -94,7 +106,8 @@ export default function AttendancePage() {
                       const active = current === s;
                       return (
                         <button key={s} onClick={() => setAttendance(a => ({ ...a, [student._id]: s }))}
-                          className={`p-1.5 rounded-lg border transition-all ${active ? info.color : 'border-gray-200 text-gray-300 hover:border-gray-300'}`}>
+                          disabled={student.isFrozen}
+                          className={`p-1.5 rounded-lg border transition-all ${active ? info.color : 'border-gray-200 text-gray-300 hover:border-gray-300'} ${student.isFrozen ? 'opacity-50 cursor-not-allowed' : ''}`}>
                           <Icon size={14} />
                         </button>
                       );
