@@ -16,9 +16,12 @@ export default function StudentResources() {
     enabled: !!user?.groupId,
   });
 
+  const getResourceId = (r) => r.id || r._id;
+
   const downloadMutation = useMutation({
     mutationFn: async (r) => {
-      const res = await api.post(`/resources/${r._id}/download`, null, { responseType: 'blob' });
+      const resourceId = r._id || r.id;
+      const res = await api.post(`/resources/${resourceId}/download`, null, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const a = document.createElement('a');
       a.href = url;
@@ -36,11 +39,12 @@ export default function StudentResources() {
       <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Resources</h1>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {resources?.map((r, i) => {
+          const resourceId = getResourceId(r);
           const Icon = TYPE_ICONS[r.type] || FileText;
           const color = TYPE_COLORS[r.type] || TYPE_COLORS.other;
-          const isDownloading = downloadMutation.isPending && downloadMutation.variables?._id === r._id;
+          const isDownloading = downloadMutation.isPending && downloadMutation.variables?._id === resourceId;
           return (
-            <motion.div key={r._id} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}
+            <motion.div key={resourceId} initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}
               className="card hover:shadow-glow hover:border-primary/20 transition-all">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${color}`}>
                 <Icon size={18} />
@@ -49,7 +53,7 @@ export default function StudentResources() {
               {r.description && <p className="text-xs text-gray-500 mb-3 line-clamp-2">{r.description}</p>}
               <div className="flex items-center justify-between">
                 <span className="badge text-xs bg-gray-100 text-gray-600">{(r.type || 'file').toUpperCase()}</span>
-                <button onClick={() => downloadMutation.mutate(r)} disabled={isDownloading}
+                <button onClick={() => downloadMutation.mutate({ _id: resourceId, id: resourceId, filePath: r.filePath, title: r.title })} disabled={isDownloading}
                   className="btn-ghost text-xs py-1 px-2 flex items-center gap-1 text-primary disabled:opacity-50">
                   {isDownloading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />} Get
                 </button>

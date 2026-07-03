@@ -52,6 +52,7 @@ export default function TeacherResources() {
   };
 
   const getType = (r) => r.type || (r.filePath?.match(/\.(jpg|png|gif)/i) ? 'image' : r.filePath?.match(/\.mp4/i) ? 'video' : r.filePath?.match(/\.pdf/i) ? 'pdf' : 'other');
+  const getResourceId = (r) => r._id || r.id;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -73,7 +74,7 @@ export default function TeacherResources() {
               <div><label className="block text-sm font-medium mb-1.5">Group (optional)</label>
                 <select value={form.groupId} onChange={e => setForm(f => ({ ...f, groupId: e.target.value }))} className="input-field">
                   <option value="">All groups</option>
-                  {groups?.map(g => <option key={g._id} value={g._id}>{g.name}</option>)}
+                  {groups?.map(g => <option key={g.id || g._id} value={g.id || g._id}>{g.name}</option>)}
                 </select></div>
               <div><label className="block text-sm font-medium mb-1.5">File *</label>
                 <label className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center cursor-pointer hover:border-primary/40 block">
@@ -96,10 +97,11 @@ export default function TeacherResources() {
       <div className="grid sm:grid-cols-2 gap-4">
         {resources?.map((r, i) => {
           const type = getType(r);
-          const Icon = TYPE_ICONS[type];
-          const isDownloading = downloadMutation.isPending && downloadMutation.variables?._id === r._id;
+          const resourceId = getResourceId(r);
+          const Icon = TYPE_ICONS[type] || FileText;
+          const isDownloading = downloadMutation.isPending && downloadMutation.variables?._id === resourceId;
           return (
-            <motion.div key={r._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+            <motion.div key={resourceId} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
               className="card flex items-start gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${TYPE_COLORS[type]}`}>
                 <Icon size={18} />
@@ -109,11 +111,11 @@ export default function TeacherResources() {
                 <div className="text-xs text-gray-400 mt-0.5">{r.group?.name || 'All groups'} • {r.downloads || 0} downloads</div>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                <button onClick={() => downloadMutation.mutate(r)} disabled={isDownloading}
+                <button onClick={() => downloadMutation.mutate({ _id: resourceId })} disabled={isDownloading}
                   className="btn-ghost p-1.5 rounded-lg text-primary hover:bg-primary/10 disabled:opacity-50">
                   {isDownloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
                 </button>
-                <button onClick={() => { if (window.confirm('Delete?')) deleteMutation.mutate(r._id); }}
+                <button onClick={() => { if (window.confirm('Delete?')) deleteMutation.mutate(resourceId); }}
                   className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50"><Trash2 size={13} /></button>
               </div>
             </motion.div>
