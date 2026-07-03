@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Plus, Upload, FileText, Image, Video, Trash2, X, Download, Loader2 } from 'lucide-react';
+import { Plus, Upload, FileText, Image, Video, Trash2, X, Download, ExternalLink, Loader2 } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
 
@@ -31,7 +31,7 @@ export default function TeacherResources() {
   const downloadMutation = useMutation({
     mutationFn: async (r) => {
       const res = await api.post(`/resources/${r._id}/download`, null, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: r.mimeType || 'application/octet-stream' }));
       const a = document.createElement('a');
       a.href = url;
       a.download = r.filePath || r.title;
@@ -43,6 +43,25 @@ export default function TeacherResources() {
     onError: () => toast.error('Faylni yuklab bo\'lmadi'),
   });
 
+  const [previewContext, setPreviewContext] = useState({ open: false, url: null, type: null, title: null, id: null });
+
+  const previewMutation = useMutation({
+    mutationFn: async (r) => {
+      const res = await api.get(`/resources/${r._id}/preview`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: r.mimeType || 'application/octet-stream' }));
+      return { id: r._id, url, type: getType(r), title: r.title, filename: r.filePath || r.title };
+    },
+    onSuccess: (data) => setPreviewContext({ open: true, ...data }),
+    onError: () => toast.error('Faylni ochib bo\'lmadi'),
+  });
+
+  const closePreview = () => {
+    if (previewContext.url) window.URL.revokeObjectURL(previewContext.url);
+    setPreviewContext({ open: false, url: null, type: null, title: null, id: null });
+  };
+
+  const getType = (r) => r.type || (r.filePath?.match(/\.(jpg|jpeg|png|gif|bmp|svg)$/i) ? 'image' : r.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'video' : r.filePath?.match(/\.pdf$/i) ? 'pdf' : 'other');
+
   const handleUpload = () => {
     if (!form.title || !file) return toast.error('Title and file required');
     const fd = new FormData();
@@ -51,7 +70,6 @@ export default function TeacherResources() {
     uploadMutation.mutate(fd);
   };
 
-  const getType = (r) => r.type || (r.filePath?.match(/\.(jpg|png|gif)/i) ? 'image' : r.filePath?.match(/\.mp4/i) ? 'video' : r.filePath?.match(/\.pdf/i) ? 'pdf' : 'other');
   const getResourceId = (r) => r._id || r.id;
 
   return (
@@ -100,6 +118,7 @@ export default function TeacherResources() {
           const resourceId = getResourceId(r);
           const Icon = TYPE_ICONS[type] || FileText;
           const isDownloading = downloadMutation.isPending && downloadMutation.variables?._id === resourceId;
+          const isPreviewing = previewMutation.isPending && previewMutation.variables?._id === resourceId;
           return (
             <motion.div key={resourceId} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
               className="card flex items-start gap-3">
@@ -111,7 +130,11 @@ export default function TeacherResources() {
                 <div className="text-xs text-gray-400 mt-0.5">{r.group?.name || 'All groups'} • {r.downloads || 0} downloads</div>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                <button onClick={() => downloadMutation.mutate({ _id: resourceId })} disabled={isDownloading}
+                <button onClick={() => previewMutation.mutate({ _id: resourceId, mimeType: r.mimeType, type: r.type, filePath: r.filePath, title: r.title })} disabled={isPreviewing}
+                  className="btn-ghost p-1.5 rounded-lg text-primary hover:bg-primary/10 disabled:opacity-50">
+                  {isPreviewing ? <Loader2 size={13} className="animate-spin" /> : <ExternalLink size={13} />}
+                </button>
+                <button onClick={() => downloadMutation.mutate({ _id: resourceId, _id: resourceId, mimeType: r.mimeType, type: r.type, filePath: r.filePath, title: r.title })} disabled={isDownloading}
                   className="btn-ghost p-1.5 rounded-lg text-primary hover:bg-primary/10 disabled:opacity-50">
                   {isDownloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
                 </button>
@@ -128,6 +151,38 @@ export default function TeacherResources() {
           </div>
         )}
       </div>
+
+      {previewContext.open && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{previewContext.title}</h2>
+                <p className="text-xs text-gray-500">{previewContext.type?.toUpperCase()}</p>
+              </div>
+              <button onClick={closePreview} className="btn-ghost p-2 rounded-full">Close</button>
+            </div>
+            <div className="p-4 overflow-auto h-[70vh] bg-gray-50 dark:bg-gray-950">
+              {previewContext.type === 'image' && (
+                <img src={previewContext.url} alt={previewContext.title} className="mx-auto max-h-[65vh] object-contain" />
+              )}
+              {previewContext.type === 'video' && (
+                <video src={previewContext.url} controls className="w-full max-h-[65vh] bg-black" />
+              )}
+              {previewContext.type === 'pdf' && (
+                <iframe src={previewContext.url} title={previewContext.title} className="w-full h-[65vh]" />
+              )}
+              {previewContext.type !== 'image' && previewContext.type !== 'video' && previewContext.type !== 'pdf' && (
+                <div className="text-center py-20 text-gray-500">
+                  <p>Inline preview is not available for this file type.</p>
+                  <button onClick={() => downloadMutation.mutate({ _id: previewContext.id, mimeType: 'application/octet-stream', filePath: previewContext.filename, title: previewContext.title })}
+                    className="btn-primary mt-5">Download file</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

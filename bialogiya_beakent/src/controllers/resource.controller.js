@@ -50,6 +50,17 @@ const getResources = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const previewResource = async (req, res, next) => {
+  try {
+    const resource = await prisma.resource.findUnique({ where: { id: req.params.id } });
+    if (!resource) return error(res, 'Not found', 404);
+    if (!resource.fileData) return error(res, 'File data unavailable — re-upload this resource', 404);
+    res.set('Content-Type', resource.mimeType || 'application/octet-stream');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(Buffer.from(resource.fileData));
+  } catch (err) { next(err); }
+};
+
 const downloadResource = async (req, res, next) => {
   try {
     const resource = await prisma.resource.findUnique({ where: { id: req.params.id } });
@@ -69,4 +80,4 @@ const deleteResource = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { uploadResource, getResources, downloadResource, deleteResource };
+module.exports = { uploadResource, getResources, previewResource, downloadResource, deleteResource };

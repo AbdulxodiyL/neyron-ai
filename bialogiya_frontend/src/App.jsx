@@ -42,6 +42,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminTeachers from './pages/admin/AdminTeachers';
 import AdminStudents from './pages/admin/AdminStudents';
 import AdminGroups from './pages/admin/AdminGroups';
+import AdminUsers from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
 
 const ProtectedRoute = ({ children, role }) => {
@@ -110,6 +111,7 @@ export default function App() {
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute role="admin"><MainLayout /></ProtectedRoute>}>
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
           <Route path="teachers" element={<AdminTeachers />} />
           <Route path="students" element={<AdminStudents />} />
           <Route path="groups" element={<AdminGroups />} />

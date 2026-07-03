@@ -38,6 +38,7 @@ const teacherLinks = [
 
 const adminLinks = [
   { to: '/admin/dashboard', icon: LayoutDashboard, key: 'dashboard' },
+  { to: '/admin/users', icon: UserCheck, key: 'users' },
   { to: '/admin/teachers', icon: BookMarked, key: 'teachers' },
   { to: '/admin/students', icon: GraduationCap, key: 'students' },
   { to: '/admin/groups', icon: Users, key: 'groups' },
