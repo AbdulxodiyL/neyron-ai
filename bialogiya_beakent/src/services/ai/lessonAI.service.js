@@ -81,7 +81,7 @@ Return valid JSON:
     }
   ]
 }
-Each question must have exactly 4 options with exactly one isCorrect:true. Provide `studentExplanation` for every question in the requested language.`;
+Each question must have exactly 4 options with exactly one isCorrect:true. Provide studentExplanation for every question in the requested language.`;
 
   const model = getModel(true);
   const result = await model.generateContent(prompt);
