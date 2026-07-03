@@ -53,8 +53,11 @@ Each question must have exactly 4 options with exactly one isCorrect:true.`;
   }
 };
 
-const generateTestFromPDFText = async (pdfText, groupId, teacherId, title) => {
+const generateTestFromPDFText = async (pdfText, groupId, teacherId, title, language = 'uz') => {
+  const langNote = language === 'uz' ? "Iltimos, barcha savollarni O'zbek (uz) tilida yarating." : `Please generate the questions in ${language}.`;
   const prompt = `You are a Biology/Chemistry teacher. Based on the following textbook content, create 15 multiple-choice test questions.
+Language: ${language}.
+${langNote}
 Content:
 ${pdfText.slice(0, 3000)}
 

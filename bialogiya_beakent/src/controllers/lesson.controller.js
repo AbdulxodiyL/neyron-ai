@@ -153,7 +153,8 @@ const generateTestFromPDF = async (req, res, next) => {
     }
 
     const testTitle = title || `Test - ${new Date().toLocaleDateString('uz-UZ')}`;
-    const generated = await generateTestFromPDFText(pdfText, groupId, req.user.userId, testTitle);
+    const { language } = req.body;
+    const generated = await generateTestFromPDFText(pdfText, groupId, req.user.userId, testTitle, language || 'uz');
 
     const questions = (generated.questions || []).map(q => ({
       text: q.text,
