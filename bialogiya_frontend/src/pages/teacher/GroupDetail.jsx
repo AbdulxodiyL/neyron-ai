@@ -182,19 +182,27 @@ export default function GroupDetail() {
                     @{p.username}{paidAt ? ` • Oxirgi to'lov: ${paidAt}` : ''}
                   </div>
                 </div>
-              {/* Payment toggle */}
-              <button
-                onClick={() => paymentMutation.mutate({ studentId: p.id, isPaid: !p.isPaid })}
-                disabled={paymentMutation.isPending}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
-                  ${p.isPaid
-                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                    : 'bg-red-100 text-red-600 hover:bg-red-200'}`}>
-                {p.isPaid ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
-                {p.isPaid ? "To'landi" : "To'lanmadi"}
-              </button>
-            </motion.div>
-          ))}
+                {/* Payment toggle */}
+                <button
+                  onClick={() =>
+                    paymentMutation.mutate({
+                      studentId: p.id,
+                      isPaid: !p.isPaid,
+                    })
+                  }
+                  disabled={paymentMutation.isPending}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    p.isPaid
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-red-100 text-red-600 hover:bg-red-200'
+                  }`}
+                >
+                  {p.isPaid ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                  {p.isPaid ? "To'landi" : "To'lanmadi"}
+                </button>
+              </motion.div>
+            );
+          })}
           {students.length === 0 && (
             <div className="text-center py-6 text-gray-400 text-sm">
               <Users size={28} className="mx-auto mb-2 opacity-30" />

@@ -1,10 +1,11 @@
 const fs = require('fs');
 const https = require('https');
 
-try {
+const token = process.argv[2] || (() => {
   const cfg = JSON.parse(fs.readFileSync('.claude/settings.json', 'utf8'));
-  const token = cfg.token;
-  const services = ['srv-d918oa8g4nts73c9fqag','srv-d918p1bsq97s73a0ru50'];
+  return cfg.token;
+})();
+const services = ['srv-d918oa8g4nts73c9fqag','srv-d918p1bsq97s73a0ru50'];
 
   function post(service) {
     const data = JSON.stringify({ clearCache: 'do_not_clear' });
@@ -33,8 +34,9 @@ try {
     req.end();
   }
 
-  services.forEach(post);
-} catch (err) {
-  console.error('Failed to read token or trigger deploys:', err.message);
+if (!token) {
+  console.error('Usage: node scripts/trigger_render_deploys.js <render_api_token>');
   process.exit(1);
 }
+
+services.forEach(post);
