@@ -162,7 +162,8 @@ const generateTestFromPDF = async (req, res, next) => {
       options: q.options || [],
       difficulty: q.difficulty || 'medium',
       points: q.points || 1,
-      explanation: q.explanation || '',
+      // Prefer `studentExplanation` (detailed step-by-step); fall back to `explanation`.
+      explanation: q.studentExplanation || q.explanation || '',
     }));
 
     if (questions.length === 0) {
