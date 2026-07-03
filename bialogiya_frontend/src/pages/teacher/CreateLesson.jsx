@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Upload, Brain, Sparkles } from 'lucide-react';
@@ -7,11 +7,29 @@ import api from '../../config/axios';
 import toast from 'react-hot-toast';
 
 export default function CreateLesson() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({ title: '', content: '', subject: 'biology', groupId: '', order: 0 });
   const [files, setFiles] = useState([]);
 
   const { data: groups } = useQuery({ queryKey: ['my-groups'], queryFn: () => api.get('/groups').then(r => r.data.data) });
+  const { data: lesson } = useQuery({
+    queryKey: ['lesson', id],
+    queryFn: () => api.get(`/lessons/${id}`).then(r => r.data.data),
+    enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (lesson) {
+      setForm({
+        title: lesson.title || '',
+        content: lesson.content || '',
+        subject: lesson.subject || 'biology',
+        groupId: lesson.groupId || '',
+        order: lesson.order || 0,
+      });
+    }
+  }, [lesson]);
 
   const createMutation = useMutation({
     mutationFn: (fd) => api.post('/lessons', fd, { headers: { 'Content-Type': 'multipart/form-data' } }),
@@ -19,8 +37,28 @@ export default function CreateLesson() {
     onError: (e) => toast.error(e.response?.data?.message || 'Error creating lesson'),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: (payload) => api.put(`/lessons/${id}`, payload),
+    onSuccess: () => { toast.success('Lesson updated successfully'); navigate('/teacher/lessons'); },
+    onError: (e) => toast.error(e.response?.data?.message || 'Error updating lesson'),
+  });
+
   const handleSubmit = () => {
     if (!form.title || !form.groupId) return toast.error('Title and Group are required');
+    const submitting = id ? updateMutation : createMutation;
+
+    if (id) {
+      const fd = new FormData();
+      fd.append('title', form.title);
+      fd.append('content', form.content);
+      fd.append('subject', form.subject);
+      fd.append('order', form.order);
+      fd.append('groupId', form.groupId);
+      files.forEach(f => fd.append('files', f));
+      updateMutation.mutate(fd);
+      return;
+    }
+
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
     files.forEach(f => fd.append('files', f));
@@ -32,7 +70,7 @@ export default function CreateLesson() {
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate(-1)} className="btn-ghost p-2 rounded-xl"><ArrowLeft size={18} /></button>
         <div>
-          <h1 className="text-xl font-bold text-gray-800 dark:text-white">Create New Lesson</h1>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-white">{id ? 'Edit Lesson' : 'Create New Lesson'}</h1>
           <p className="text-sm text-gray-500">AI will automatically generate explanations, quizzes & more</p>
         </div>
       </div>
@@ -89,9 +127,13 @@ export default function CreateLesson() {
             </div>
           )}
         </div>
-        <button onClick={handleSubmit} disabled={createMutation.isPending}
+        <button onClick={handleSubmit} disabled={id ? updateMutation.isPending : createMutation.isPending}
           className="btn-primary w-full flex items-center justify-center gap-2 py-3">
-          {createMutation.isPending ? (<><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" /> Creating...</>) : (<><Sparkles size={16} /> Create Lesson & Generate AI Content</>)}
+          {(id ? updateMutation.isPending : createMutation.isPending) ? (
+            <><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" /> {id ? 'Saving...' : 'Creating...'}</>
+          ) : (
+            <><Sparkles size={16} /> {id ? 'Save Lesson' : 'Create Lesson & Generate AI Content'}</>
+          )}
         </button>
       </div>
     </div>

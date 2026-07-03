@@ -6,13 +6,21 @@ const markAttendance = async (req, res, next) => {
     const { groupId, date, records } = req.body;
     if (!groupId || !date || !records) return error(res, 'groupId, date and records required', 400);
 
+    const activeStudents = await prisma.user.findMany({
+      where: { groupId, role: 'student', isActive: true, isFrozen: false },
+      select: { id: true },
+    });
+    const activeIds = new Set(activeStudents.map(s => s.id));
+
+    const cleanedRecords = (Array.isArray(records) ? records : []).filter(r => activeIds.has(r.studentId));
+
     const dateObj = new Date(date);
     dateObj.setUTCHours(0, 0, 0, 0);
 
     const att = await prisma.attendance.upsert({
       where: { groupId_date: { groupId, date: dateObj } },
-      update: { records, teacherId: req.user.userId },
-      create: { groupId, date: dateObj, records, teacherId: req.user.userId },
+      update: { records: cleanedRecords, teacherId: req.user.userId },
+      create: { groupId, date: dateObj, records: cleanedRecords, teacherId: req.user.userId },
     });
     return success(res, att, 'Attendance saved');
   } catch (err) { next(err); }

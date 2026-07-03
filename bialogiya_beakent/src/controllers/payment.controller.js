@@ -39,6 +39,9 @@ const markPayment = async (req, res, next) => {
     const { studentId, month, isPaid, note } = req.body;
     if (!studentId || !month) return error(res, 'studentId and month required', 400);
 
+    const student = await prisma.user.findUnique({ where: { id: studentId }, select: { id: true, isActive: true, groupId: true, role: true } });
+    if (!student || student.role !== 'student' || !student.isActive) return error(res, 'Student not found or inactive', 404);
+
     const payment = await prisma.payment.upsert({
       where: { studentId_month: { studentId, month } },
       create: { studentId, month, isPaid: isPaid !== false, note, teacherId: req.user.userId, paidAt: new Date() },

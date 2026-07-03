@@ -62,10 +62,21 @@ const getLessonById = async (req, res, next) => {
 
 const updateLesson = async (req, res, next) => {
   try {
-    const { title, content, subject, order } = req.body;
+    const { title, content, subject, order, groupId } = req.body;
+    const attachments = (req.files || []).map(f => ({ name: f.originalname, path: f.path, type: f.mimetype }));
+
+    const updateData = {
+      ...(title !== undefined && { title }),
+      ...(content !== undefined && { content }),
+      ...(subject !== undefined && { subject }),
+      ...(order !== undefined && { order: parseInt(order, 10) || 0 }),
+      ...(groupId !== undefined && { groupId }),
+      ...(attachments.length > 0 && { attachments }),
+    };
+
     const lesson = await prisma.lesson.update({
       where: { id: req.params.id },
-      data: { title, content, subject, order },
+      data: updateData,
     });
     return success(res, lesson);
   } catch (err) { next(err); }

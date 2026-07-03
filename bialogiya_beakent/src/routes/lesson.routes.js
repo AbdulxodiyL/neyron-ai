@@ -10,7 +10,7 @@ router.get('/', verifyToken, getLessons);
 router.get('/:id', verifyToken, getLessonById);
 router.get('/:id/ai', verifyToken, getAIContent);
 router.post('/', verifyToken, requireRole('teacher', 'admin'), upload.array('files', 5), createLesson);
-router.put('/:id', verifyToken, requireRole('teacher', 'admin'), updateLesson);
+router.put('/:id', verifyToken, requireRole('teacher', 'admin'), upload.array('files', 5), updateLesson);
 router.delete('/:id', verifyToken, requireRole('teacher', 'admin'), deleteLesson);
 router.post('/:id/regenerate-ai', verifyToken, requireRole('teacher', 'admin'), regenerateAI);
 router.post('/generate-test-from-pdf', verifyToken, requireRole('teacher', 'admin'), pdfUpload.single('pdf'), generateTestFromPDF);
