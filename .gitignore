@@ -1,3 +1,9 @@
+node_modules/
+dist/
+.env
+.claude/
+coverage/
+.DS_Store
 # Environment variables (NEVER commit!)
 .env
 .env.local
