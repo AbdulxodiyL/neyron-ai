@@ -4,7 +4,7 @@ const genAI = new GoogleGenerativeAI(process.env.GIMINI_AI_API_KEY || '');
 
 const getModel = (jsonMode = false) => {
   return genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
     generationConfig: jsonMode ? { responseMimeType: 'application/json' } : {},
   });
 };
