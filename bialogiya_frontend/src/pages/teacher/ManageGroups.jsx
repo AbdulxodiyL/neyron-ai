@@ -5,21 +5,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Users, Trash2, ChevronRight, X } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+import { SUBJECTS, SUBJECT_LABELS, getSubjectLabel } from '../../utils/subjects';
 
-const SUBJECTS = ['biology', 'chemistry', 'both'];
-const ICONS = ['🧬', '⚗️', '📚', '🔬', '🧪', '💊', '🌿', '🦠'];
+const ICONS = ['🧬', '⚗️', '📚', '🔬', '🧪', '💊', '🌿', '🦠', '📐', '🌍', '🕰️', '💻'];
 
 export default function ManageGroups() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', description: '', subject: 'biology', icon: '🧬', color: '#00BFA6' });
+  const [form, setForm] = useState({ name: '', description: '', subject: 'biology', customSubject: '', icon: '🧬', color: '#00BFA6' });
 
   const { data: groups, isLoading } = useQuery({ queryKey: ['my-groups'], queryFn: () => api.get('/groups').then(r => r.data.data) });
 
   const createMutation = useMutation({
-    mutationFn: (d) => api.post('/groups', d),
-    onSuccess: () => { qc.invalidateQueries(['my-groups']); setShowCreate(false); toast.success('Group created!'); setForm({ name: '', description: '', subject: 'biology', icon: '🧬', color: '#00BFA6' }); },
+    mutationFn: (d) => api.post('/groups', { ...d, subject: d.subject === 'other' ? (d.customSubject.trim() || 'other') : d.subject }),
+    onSuccess: () => { qc.invalidateQueries(['my-groups']); setShowCreate(false); toast.success('Group created!'); setForm({ name: '', description: '', subject: 'biology', customSubject: '', icon: '🧬', color: '#00BFA6' }); },
     onError: (e) => toast.error(e.response?.data?.message || 'Error'),
   });
 
@@ -54,8 +54,12 @@ export default function ManageGroups() {
                 <div>
                   <label className="block text-sm font-medium mb-1.5">Subject</label>
                   <select value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} className="input-field">
-                    {SUBJECTS.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                    {SUBJECTS.map(s => <option key={s} value={s}>{SUBJECT_LABELS[s] || s}</option>)}
                   </select>
+                  {form.subject === 'other' && (
+                    <input value={form.customSubject} onChange={e => setForm(f => ({ ...f, customSubject: e.target.value }))}
+                      placeholder="Fan nomini kiriting" className="input-field mt-2" />
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5">Icon</label>
@@ -76,7 +80,8 @@ export default function ManageGroups() {
               </div>
               <div className="flex gap-3 mt-5">
                 <button onClick={() => setShowCreate(false)} className="btn-ghost flex-1">Cancel</button>
-                <button onClick={() => form.name && createMutation.mutate(form)} disabled={!form.name || createMutation.isPending}
+                <button onClick={() => form.name && createMutation.mutate(form)}
+                  disabled={!form.name || (form.subject === 'other' && !form.customSubject.trim()) || createMutation.isPending}
                   className="btn-primary flex-1 disabled:opacity-40">
                   {createMutation.isPending ? 'Creating...' : 'Create Group'}
                 </button>
@@ -97,7 +102,7 @@ export default function ManageGroups() {
               <div className="flex-1">
                 <h3 className="font-bold text-gray-800 dark:text-white group-hover:text-primary transition-colors">{g.name}</h3>
                 <span className={`badge text-xs mt-0.5 ${g.subject === 'biology' ? 'bg-green-100 text-green-700' : g.subject === 'chemistry' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-                  {g.subject}
+                  {getSubjectLabel(g.subject)}
                 </span>
               </div>
               <div className="flex items-center gap-1">

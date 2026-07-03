@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+import { getSubjectLabel } from '../../utils/subjects';
 
 const MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
 
@@ -114,7 +115,7 @@ export default function GroupDetail() {
           <div>
             <h1 className="text-xl font-bold text-gray-800 dark:text-white">{group?.name}</h1>
             <span className={`badge text-xs ${group?.subject === 'biology' ? 'bg-green-100 text-green-700' : group?.subject === 'chemistry' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-              {group?.subject}
+              {getSubjectLabel(group?.subject)}
             </span>
           </div>
         </div>

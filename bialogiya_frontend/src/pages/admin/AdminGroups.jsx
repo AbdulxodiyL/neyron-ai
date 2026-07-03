@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Users, BookOpen } from 'lucide-react';
 import api from '../../config/axios';
+import { getSubjectLabel } from '../../utils/subjects';
 
 export default function AdminGroups() {
   const { data: groups } = useQuery({ queryKey: ['all-groups'], queryFn: () => api.get('/admin/groups').then(r => r.data.data) });
@@ -19,7 +20,7 @@ export default function AdminGroups() {
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-gray-800 dark:text-white truncate">{g.name}</h3>
                 <span className={`badge text-xs ${g.subject === 'biology' ? 'bg-green-100 text-green-700' : g.subject === 'chemistry' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-                  {g.subject}
+                  {getSubjectLabel(g.subject)}
                 </span>
               </div>
             </div>
