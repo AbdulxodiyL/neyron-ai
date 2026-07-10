@@ -6,10 +6,12 @@ import { useTranslation } from 'react-i18next';
 import {
   Brain, Lightbulb, BookOpen, Repeat, FileText, Map, Volume2,
   MessageSquare, Users, ArrowLeft, RefreshCw, ChevronLeft, ChevronRight,
-  Send, Loader2, Play, Pause, Square, Check, X
+  Send, Loader2, Play, Pause, Square, Check, X, Download
 } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
 
 const TABS = [
   { id: 'overview', icon: BookOpen, key: 'overview', label: 'Overview' },
@@ -392,6 +394,21 @@ export default function LessonDetail() {
     onSuccess: () => { toast.success('AI regeneration started'); queryClient.invalidateQueries(['lesson', id]); },
   });
 
+  const downloadAtt = useMutation({
+    mutationFn: async (att) => {
+      const res = await api.get(`${API_BASE}/${att.path}`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = att.name || 'file';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    },
+    onError: () => toast.error('Faylni yuklab bo‘lmadi'),
+  });
+
   const ai = lesson?.aiContent;
   const isGenerating = ai?.status === 'generating';
   const isDone = ai?.status === 'done';
@@ -485,14 +502,15 @@ export default function LessonDetail() {
               </div>
               {lesson?.attachments?.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="font-semibold mb-3 text-gray-700">Attachments</h3>
-                  <div className="grid grid-cols-2 gap-2">
+                  <h3 className="font-semibold mb-3 text-gray-700 dark:text-gray-200">Attachments</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {lesson.attachments.map((att, i) => (
-                      <a key={i} href={`http://localhost:5000${att.path}`} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-sm">
-                        <FileText size={16} className="text-primary" />
-                        <span className="truncate">{att.name}</span>
-                      </a>
+                      <button key={i} onClick={() => downloadAtt.mutate(att)} disabled={downloadAtt.isPending}
+                        className="flex items-center gap-2 p-3 bg-gray-900 text-white rounded-xl hover:bg-black transition-colors text-sm text-left">
+                        <Download size={16} className="flex-shrink-0" />
+                        <span className="truncate flex-1">{att.name}</span>
+                        {downloadAtt.isPending && downloadAtt.variables === att && <Loader2 size={14} className="animate-spin" />}
+                      </button>
                     ))}
                   </div>
                 </div>
