@@ -279,8 +279,7 @@ function AIChatSection({ lessonId, i18nLanguage }) {
 
   const { data: history, isLoading: histLoading } = useQuery({
     queryKey: ['ai-chat-history', lessonId],
-    queryFn: () => api.get(`/lessons/${lessonId}/ai-chat/history`).then(r => r.data.data),
-    onSuccess: (data) => setMessages(data || []),
+    queryFn: () => api.get(`/lessons/${lessonId}/ai-chat/history`).then(r => r.data.data?.messages || []),
   });
 
   useEffect(() => {
@@ -294,7 +293,7 @@ function AIChatSection({ lessonId, i18nLanguage }) {
       setInput('');
     },
     onSuccess: ({ data }) => {
-      setMessages(prev => [...prev, { role: 'assistant', content: data.data.message, timestamp: new Date() }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: data.reply, timestamp: new Date() }]);
     },
     onError: () => toast.error('AI is unavailable. Try again.'),
   });
