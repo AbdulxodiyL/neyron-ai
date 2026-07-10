@@ -3,6 +3,7 @@ services:
     name: neyron-ai-backend
     env: node
     rootDir: bialogiya_beakent
+    nodeVersion: 22
     buildCommand: npm install --include=dev && npx prisma generate
     startCommand: node server.js
     plan: free
@@ -36,6 +37,7 @@ services:
     name: neyron-ai-frontend
     env: static
     rootDir: bialogiya_frontend
+    nodeVersion: 22
     buildCommand: npm install --include=dev && npm run build
     staticPublishPath: ./dist
     routes:
