@@ -5,6 +5,7 @@ const { generateQuiz } = require('../services/ai/lessonAI.service');
 const { synthesizeSpeech, MIME_TYPE: TTS_MIME_TYPE } = require('../services/ai/geminiTts.service');
 const { synthesizeWithClonedVoice } = require('../services/ai/voiceClone.service');
 const { generateExplainerScript } = require('../services/ai/explainerVideoAI.service');
+const { generateImage } = require('../services/ai/geminiImage.service');
 
 // Students can only reach lessons in their own group (see lesson.controller
 // getLessons for the same rule); this helper re-checks that on every AI-media
@@ -150,6 +151,34 @@ const getExplainerSlideAudio = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// GET /api/lessons/:id/ai/explainer-video/image/:slideIndex - lazy per-slide
+// illustration, generated once and cached in LessonMedia after that.
+const getExplainerSlideImage = async (req, res, next) => {
+  try {
+    const slideIndex = parseInt(req.params.slideIndex, 10);
+    if (Number.isNaN(slideIndex)) return error(res, 'Invalid slide index', 400);
+
+    const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id } });
+    if (!lesson) return error(res, 'Lesson not found', 404);
+    if (!(await assertLessonAccess(lesson, req.user))) return error(res, 'Forbidden', 403);
+
+    const script = lesson.aiContent?.explainerVideo;
+    const slide = script?.slides?.[slideIndex];
+    if (!slide) return error(res, 'Slide not found', 404);
+
+    const cached = await prisma.lessonMedia.findUnique({
+      where: { lessonId_kind_slideIndex: { lessonId: lesson.id, kind: 'explainer_slide_image', slideIndex } },
+    });
+    if (cached) return streamAudioBuffer(res, cached.data, cached.mimeType);
+
+    const { buffer: image, mimeType } = await generateImage(slide.imagePrompt);
+    const saved = await prisma.lessonMedia.create({
+      data: { lessonId: lesson.id, kind: 'explainer_slide_image', slideIndex, data: image, mimeType },
+    });
+    return streamAudioBuffer(res, saved.data, saved.mimeType);
+  } catch (err) { next(err); }
+};
+
 const chatMessage = async (req, res, next) => {
   try {
     const { lessonId } = req.params;
@@ -219,5 +248,5 @@ const markNotifRead = async (req, res, next) => {
 
 module.exports = {
   chatMessage, getChatHistory, generateQuizForLesson, getNotifications, markNotifRead,
-  getStoryAudio, getVoiceAudio, generateExplainerVideo, getExplainerVideo, getExplainerSlideAudio,
+  getStoryAudio, getVoiceAudio, generateExplainerVideo, getExplainerVideo, getExplainerSlideAudio, getExplainerSlideImage,
 };

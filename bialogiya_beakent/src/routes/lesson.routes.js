@@ -6,7 +6,7 @@ const { pdfUpload } = require('../middleware/upload.middleware');
 const { createLesson, getLessons, getLessonById, updateLesson, deleteLesson, regenerateAI, getAIContent, generateTestFromPDF } = require('../controllers/lesson.controller');
 const {
   chatMessage, getChatHistory, generateQuizForLesson,
-  getStoryAudio, getVoiceAudio, generateExplainerVideo, getExplainerVideo, getExplainerSlideAudio,
+  getStoryAudio, getVoiceAudio, generateExplainerVideo, getExplainerVideo, getExplainerSlideAudio, getExplainerSlideImage,
 } = require('../controllers/ai.controller');
 
 router.get('/', verifyToken, getLessons);
@@ -27,5 +27,6 @@ router.get('/:id/ai/voice-audio', verifyToken, getVoiceAudio);
 router.post('/:id/ai/explainer-video', verifyToken, generateExplainerVideo);
 router.get('/:id/ai/explainer-video', verifyToken, getExplainerVideo);
 router.get('/:id/ai/explainer-video/audio/:slideIndex', verifyToken, getExplainerSlideAudio);
+router.get('/:id/ai/explainer-video/image/:slideIndex', verifyToken, getExplainerSlideImage);
 
 module.exports = router;

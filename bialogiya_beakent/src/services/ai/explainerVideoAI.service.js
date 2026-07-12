@@ -19,6 +19,7 @@ const generateExplainerScript = async (title, content, language = 'uz') => {
       title: s.title || `Slide ${i + 1}`,
       bullets: Array.isArray(s.bullets) ? s.bullets.slice(0, 5) : [],
       narration: s.narration || '',
+      imagePrompt: s.imagePrompt || `Simple flat-design educational illustration of: ${s.title || title}. No text, no letters, no numbers in the image.`,
     })),
     generatedAt: new Date().toISOString(),
   };

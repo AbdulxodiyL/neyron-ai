@@ -152,16 +152,18 @@ Return valid JSON with this exact shape:
     {
       "title": "short slide heading (max 6 words)",
       "bullets": ["short bullet point", "short bullet point", "..."],
-      "narration": "what the narrator says out loud for this slide - natural spoken sentences, 2-4 sentences, matching and expanding on the bullets, suitable for text-to-speech"
+      "narration": "what the narrator says out loud for this slide - natural spoken sentences, 2-4 sentences, matching and expanding on the bullets, suitable for text-to-speech",
+      "imagePrompt": "a prompt for an AI image generator to illustrate this slide's idea - describe a simple, clean, educational illustration (flat design or friendly diagram style) that visually represents the concept. Never ask for any text, letters, numbers, or labels to appear in the image - describe only visual elements, shapes, and scenes."
     }
   ]
 }
 
 Rules:
 - 5-8 slides total.
-- Each slide: 2-4 short bullets (max ~8 words each) and one narration block.
+- Each slide: 2-4 short bullets (max ~8 words each), one narration block, and one imagePrompt.
 - The last slide must be a short summary/recap.
 - Narration must sound natural when read aloud, not like a list.
+- imagePrompt must always explicitly avoid text/letters/numbers in the image (image models render text badly), and should describe a single clear, simple educational visual, not a busy scene.
 - Do not use markdown syntax anywhere (no **bold**, no # headers, no "- " list markers) - plain text only in every field.`;
 };
 
