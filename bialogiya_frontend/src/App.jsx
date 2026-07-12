@@ -36,6 +36,7 @@ import TestResultsPage from './pages/teacher/TestResultsPage';
 import AttendancePage from './pages/teacher/AttendancePage';
 import TeacherResources from './pages/teacher/TeacherResources';
 import TeacherAnalytics from './pages/teacher/TeacherAnalytics';
+import TeacherVoice from './pages/teacher/TeacherVoice';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -106,6 +107,7 @@ export default function App() {
           <Route path="attendance" element={<AttendancePage />} />
           <Route path="resources" element={<TeacherResources />} />
           <Route path="analytics" element={<TeacherAnalytics />} />
+          <Route path="voice" element={<TeacherVoice />} />
         </Route>
 
         {/* Admin Routes */}

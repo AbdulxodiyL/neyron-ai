@@ -68,6 +68,47 @@ const runMigrations = async () => {
       END $$
     `);
 
+    // Create LessonMedia table if missing (cached TTS audio for story narration
+    // and explainer-video slides)
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "LessonMedia" (
+        "id"         TEXT NOT NULL,
+        "lessonId"   TEXT NOT NULL,
+        "kind"       TEXT NOT NULL,
+        "slideIndex" INTEGER,
+        "data"       BYTEA NOT NULL,
+        "mimeType"   TEXT NOT NULL DEFAULT 'audio/mpeg',
+        "voice"      TEXT,
+        "createdAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "LessonMedia_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'LessonMedia_lessonId_fkey'
+        ) THEN
+          ALTER TABLE "LessonMedia" ADD CONSTRAINT "LessonMedia_lessonId_fkey"
+            FOREIGN KEY ("lessonId") REFERENCES "Lesson"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+        END IF;
+      END $$
+    `);
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'LessonMedia_lessonId_kind_slideIndex_key'
+        ) THEN
+          ALTER TABLE "LessonMedia" ADD CONSTRAINT "LessonMedia_lessonId_kind_slideIndex_key"
+            UNIQUE ("lessonId", "kind", "slideIndex");
+        END IF;
+      END $$
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "clonedVoiceId" TEXT,
+      ADD COLUMN IF NOT EXISTS "clonedVoiceName" TEXT
+    `);
+
     console.log('✅ Schema migrations applied');
   } catch (err) {
     console.warn('⚠️  Migration warning (non-fatal):', err.message);

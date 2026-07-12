@@ -6,10 +6,13 @@ import { useTranslation } from 'react-i18next';
 import {
   Brain, Lightbulb, BookOpen, Repeat, FileText, Map, Volume2,
   MessageSquare, Users, ArrowLeft, RefreshCw, ChevronLeft, ChevronRight,
-  Send, Loader2, Play, Pause, Square, Check, X, Download
+  Send, Loader2, Play, Pause, Square, Check, X, Download, Clapperboard, Mic
 } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+import StoryAudioPlayer from '../../components/ai/StoryAudioPlayer';
+import ExplainerVideoPlayer from '../../components/ai/ExplainerVideoPlayer';
+import SpeakingPractice from '../../components/ai/SpeakingPractice';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
 
@@ -24,6 +27,8 @@ const TABS = [
   { id: 'summary', icon: FileText, key: 'summary', label: 'Summary' },
   { id: 'mindmap', icon: Map, key: 'mind_map', label: 'Mind Map' },
   { id: 'voice', icon: Volume2, key: 'voice_teacher', label: 'Voice' },
+  { id: 'video', icon: Clapperboard, key: 'explainer_video', label: 'Video' },
+  { id: 'speaking', icon: Mic, key: 'speaking_practice', label: 'Speaking' },
   { id: 'chat', icon: MessageSquare, key: 'ai_chat', label: 'AI Chat' },
 ];
 
@@ -532,6 +537,7 @@ export default function LessonDetail() {
           {activeTab === 'story' && (
             <div>
               <h2 className="text-lg font-bold mb-4 gradient-text">Story Mode 📖</h2>
+              {ai?.storyMode && <div className="mb-4"><StoryAudioPlayer lessonId={id} /></div>}
               <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{ai?.storyMode}</div>
             </div>
           )}
@@ -551,6 +557,8 @@ export default function LessonDetail() {
           )}
           {activeTab === 'mindmap' && <MindMap data={ai?.mindMapData} />}
           {activeTab === 'voice' && <VoiceSection text={ai?.simpleExplanation} title={lesson?.title} />}
+          {activeTab === 'video' && <ExplainerVideoPlayer lessonId={id} />}
+          {activeTab === 'speaking' && <SpeakingPractice lessonId={id} topic={lesson?.title} />}
           {activeTab === 'chat' && <AIChatSection lessonId={id} i18nLanguage={i18n.language} />}
         </motion.div>
       </AnimatePresence>

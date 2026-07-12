@@ -2,6 +2,127 @@ const { prisma } = require('../config/db');
 const { success, error } = require('../utils/apiResponse');
 const { chatWithAI } = require('../services/ai/chatAI.service');
 const { generateQuiz } = require('../services/ai/lessonAI.service');
+const { synthesizeSpeech, MIME_TYPE: TTS_MIME_TYPE } = require('../services/ai/geminiTts.service');
+const { synthesizeWithClonedVoice } = require('../services/ai/voiceClone.service');
+const { generateExplainerScript } = require('../services/ai/explainerVideoAI.service');
+
+// Students can only reach lessons in their own group (see lesson.controller
+// getLessons for the same rule); this helper re-checks that on every AI-media
+// endpoint since they're fetched directly by lesson id.
+const assertLessonAccess = async (lesson, user) => {
+  if (user.role === 'admin' || user.role === 'teacher') return true;
+  const student = await prisma.user.findUnique({ where: { id: user.userId }, select: { groupId: true } });
+  return !!student?.groupId && student.groupId === lesson.groupId;
+};
+
+const streamAudioBuffer = (res, buffer, mimeType) => {
+  res.set({
+    'Content-Type': mimeType,
+    'Content-Length': buffer.length,
+    'Cache-Control': 'private, max-age=86400',
+  });
+  res.send(buffer);
+};
+
+// Prefer the lesson's teacher's cloned voice (uploaded via /api/voice/clone)
+// when one exists, otherwise fall back to the default OpenAI TTS voice.
+const synthesizeForLesson = async (teacherId, text) => {
+  const teacher = await prisma.user.findUnique({ where: { id: teacherId }, select: { clonedVoiceId: true } });
+  if (teacher?.clonedVoiceId) {
+    try {
+      const buffer = await synthesizeWithClonedVoice(text, teacher.clonedVoiceId);
+      return { buffer, mimeType: 'audio/mpeg' }; // ElevenLabs returns mp3
+    } catch (err) {
+      console.error('Cloned-voice synthesis failed, falling back to default Gemini voice:', err.message);
+    }
+  }
+  const buffer = await synthesizeSpeech(text);
+  return { buffer, mimeType: TTS_MIME_TYPE }; // Gemini returns wav
+};
+
+// GET /api/lessons/:id/ai/story-audio - TTS narration of the AI-generated
+// "storyMode" text, generated once and cached in LessonMedia after that.
+const getStoryAudio = async (req, res, next) => {
+  try {
+    const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id } });
+    if (!lesson) return error(res, 'Lesson not found', 404);
+    if (!(await assertLessonAccess(lesson, req.user))) return error(res, 'Forbidden', 403);
+
+    const storyText = lesson.aiContent?.storyMode;
+    if (!storyText) return error(res, 'Story not generated yet for this lesson', 404);
+
+    const cached = await prisma.lessonMedia.findUnique({
+      where: { lessonId_kind_slideIndex: { lessonId: lesson.id, kind: 'story', slideIndex: null } },
+    });
+    if (cached) return streamAudioBuffer(res, cached.data, cached.mimeType);
+
+    const { buffer: audio, mimeType } = await synthesizeForLesson(lesson.teacherId, storyText);
+    const saved = await prisma.lessonMedia.create({
+      data: { lessonId: lesson.id, kind: 'story', slideIndex: null, data: audio, mimeType },
+    });
+    return streamAudioBuffer(res, saved.data, saved.mimeType);
+  } catch (err) { next(err); }
+};
+
+// POST /api/lessons/:id/ai/explainer-video - generate (or regenerate) the
+// slide script for the concept/grammar explainer. Slide audio is generated
+// lazily per-slide the first time it's played (see getExplainerSlideAudio).
+const generateExplainerVideo = async (req, res, next) => {
+  try {
+    const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id } });
+    if (!lesson) return error(res, 'Lesson not found', 404);
+    if (!(await assertLessonAccess(lesson, req.user))) return error(res, 'Forbidden', 403);
+
+    const { language } = req.body || {};
+    const script = await generateExplainerScript(lesson.title, lesson.content || '', language || 'uz');
+
+    const aiContent = { ...(lesson.aiContent || {}), explainerVideo: script };
+    await prisma.lesson.update({ where: { id: lesson.id }, data: { aiContent } });
+    // Clear any stale cached slide audio from a previous script version
+    await prisma.lessonMedia.deleteMany({ where: { lessonId: lesson.id, kind: 'explainer_slide' } });
+
+    return success(res, script, 'Explainer video generated', 201);
+  } catch (err) { next(err); }
+};
+
+// GET /api/lessons/:id/ai/explainer-video - returns the cached slide script
+const getExplainerVideo = async (req, res, next) => {
+  try {
+    const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id }, select: { groupId: true, aiContent: true } });
+    if (!lesson) return error(res, 'Lesson not found', 404);
+    if (!(await assertLessonAccess(lesson, req.user))) return error(res, 'Forbidden', 403);
+
+    const script = lesson.aiContent?.explainerVideo || null;
+    return success(res, script);
+  } catch (err) { next(err); }
+};
+
+// GET /api/lessons/:id/ai/explainer-video/audio/:slideIndex - lazy per-slide TTS
+const getExplainerSlideAudio = async (req, res, next) => {
+  try {
+    const slideIndex = parseInt(req.params.slideIndex, 10);
+    if (Number.isNaN(slideIndex)) return error(res, 'Invalid slide index', 400);
+
+    const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id } });
+    if (!lesson) return error(res, 'Lesson not found', 404);
+    if (!(await assertLessonAccess(lesson, req.user))) return error(res, 'Forbidden', 403);
+
+    const script = lesson.aiContent?.explainerVideo;
+    const slide = script?.slides?.[slideIndex];
+    if (!slide) return error(res, 'Slide not found', 404);
+
+    const cached = await prisma.lessonMedia.findUnique({
+      where: { lessonId_kind_slideIndex: { lessonId: lesson.id, kind: 'explainer_slide', slideIndex } },
+    });
+    if (cached) return streamAudioBuffer(res, cached.data, cached.mimeType);
+
+    const { buffer: audio, mimeType } = await synthesizeForLesson(lesson.teacherId, slide.narration);
+    const saved = await prisma.lessonMedia.create({
+      data: { lessonId: lesson.id, kind: 'explainer_slide', slideIndex, data: audio, mimeType },
+    });
+    return streamAudioBuffer(res, saved.data, saved.mimeType);
+  } catch (err) { next(err); }
+};
 
 const chatMessage = async (req, res, next) => {
   try {
@@ -70,4 +191,7 @@ const markNotifRead = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { chatMessage, getChatHistory, generateQuizForLesson, getNotifications, markNotifRead };
+module.exports = {
+  chatMessage, getChatHistory, generateQuizForLesson, getNotifications, markNotifRead,
+  getStoryAudio, generateExplainerVideo, getExplainerVideo, getExplainerSlideAudio,
+};
