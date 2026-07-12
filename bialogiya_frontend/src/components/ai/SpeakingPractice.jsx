@@ -135,16 +135,7 @@ export default function SpeakingPractice({ lessonId, topic }) {
       );
       wsRef.current = ws;
 
-      ws.onopen = async () => {
-        ws.send(JSON.stringify({
-          setup: {
-            model: `models/${model}`,
-            generationConfig: { responseModalities: ['AUDIO'] },
-            inputAudioTranscription: {},
-            outputAudioTranscription: {},
-          },
-        }));
-
+      const startMicCapture = async () => {
         const micStream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, sampleRate: MIC_SAMPLE_RATE } });
         micStreamRef.current = micStream;
         const micCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: MIC_SAMPLE_RATE });
@@ -167,10 +158,37 @@ export default function SpeakingPractice({ lessonId, topic }) {
         setStatus(STATUS.CONNECTED);
       };
 
+      ws.onopen = () => {
+        // inputAudioTranscription/outputAudioTranscription must live INSIDE
+        // generationConfig (not as siblings of it) - Gemini silently ignores
+        // a malformed setup otherwise.
+        ws.send(JSON.stringify({
+          setup: {
+            model: `models/${model}`,
+            generationConfig: {
+              responseModalities: ['AUDIO'],
+              inputAudioTranscription: {},
+              outputAudioTranscription: {},
+            },
+          },
+        }));
+        // Mic capture starts only after the server confirms setupComplete
+        // (see ws.onmessage below) - sending audio before that is silently
+        // dropped by the server, which is why the AI never responded.
+      };
+
       ws.onmessage = async (evt) => {
         try {
           const text = typeof evt.data === 'string' ? evt.data : await evt.data.text();
-          handleServerMessage(JSON.parse(text));
+          const msg = JSON.parse(text);
+          if (msg.setupComplete) {
+            startMicCapture().catch(err => {
+              console.error(err);
+              toast.error("Mikrofonga ruxsat berilmadi");
+            });
+            return;
+          }
+          handleServerMessage(msg);
         } catch { /* ignore non-JSON frames */ }
       };
 
