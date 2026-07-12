@@ -53,7 +53,10 @@ const synthesizeSpeech = async (text, { voice = DEFAULT_VOICE } = {}) => {
   if (!res.ok) {
     const detail = await res.text();
     console.error('Gemini TTS error:', detail);
-    throw new Error('Gemini TTS synthesis failed');
+    // Surface the real reason (temporarily verbose, for debugging) instead of
+    // a generic message - this shows up directly in the client's Network tab
+    // response body without needing server-log access.
+    throw new Error(`Gemini TTS failed (HTTP ${res.status}): ${detail.slice(0, 300)}`);
   }
 
   const data = await res.json();
