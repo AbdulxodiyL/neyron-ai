@@ -52,13 +52,13 @@ const getStoryAudio = async (req, res, next) => {
     if (!storyText) return error(res, 'Story not generated yet for this lesson', 404);
 
     const cached = await prisma.lessonMedia.findUnique({
-      where: { lessonId_kind_slideIndex: { lessonId: lesson.id, kind: 'story', slideIndex: null } },
+      where: { lessonId_kind_slideIndex: { lessonId: lesson.id, kind: 'story', slideIndex: -1 } },
     });
     if (cached) return streamAudioBuffer(res, cached.data, cached.mimeType);
 
     const { buffer: audio, mimeType } = await synthesizeForLesson(lesson.teacherId, storyText);
     const saved = await prisma.lessonMedia.create({
-      data: { lessonId: lesson.id, kind: 'story', slideIndex: null, data: audio, mimeType },
+      data: { lessonId: lesson.id, kind: 'story', slideIndex: -1, data: audio, mimeType },
     });
     return streamAudioBuffer(res, saved.data, saved.mimeType);
   } catch (err) { next(err); }
@@ -78,13 +78,13 @@ const getVoiceAudio = async (req, res, next) => {
     if (!explanationText) return error(res, 'No explanation available for this lesson', 404);
 
     const cached = await prisma.lessonMedia.findUnique({
-      where: { lessonId_kind_slideIndex: { lessonId: lesson.id, kind: 'voice', slideIndex: null } },
+      where: { lessonId_kind_slideIndex: { lessonId: lesson.id, kind: 'voice', slideIndex: -1 } },
     });
     if (cached) return streamAudioBuffer(res, cached.data, cached.mimeType);
 
     const { buffer: audio, mimeType } = await synthesizeForLesson(lesson.teacherId, explanationText);
     const saved = await prisma.lessonMedia.create({
-      data: { lessonId: lesson.id, kind: 'voice', slideIndex: null, data: audio, mimeType },
+      data: { lessonId: lesson.id, kind: 'voice', slideIndex: -1, data: audio, mimeType },
     });
     return streamAudioBuffer(res, saved.data, saved.mimeType);
   } catch (err) { next(err); }

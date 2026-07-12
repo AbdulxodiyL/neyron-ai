@@ -75,7 +75,7 @@ const runMigrations = async () => {
         "id"         TEXT NOT NULL,
         "lessonId"   TEXT NOT NULL,
         "kind"       TEXT NOT NULL,
-        "slideIndex" INTEGER,
+        "slideIndex" INTEGER NOT NULL DEFAULT -1,
         "data"       BYTEA NOT NULL,
         "mimeType"   TEXT NOT NULL DEFAULT 'audio/mpeg',
         "voice"      TEXT,
@@ -83,6 +83,18 @@ const runMigrations = async () => {
         CONSTRAINT "LessonMedia_pkey" PRIMARY KEY ("id")
       )
     `);
+    // Fix up tables created before slideIndex became non-nullable: Prisma
+    // can't filter a composite @@unique key by null (Postgres NULL != NULL),
+    // so 'story'/'voice' rows use -1 as a sentinel instead of null.
+    await prisma.$executeRawUnsafe(`
+      UPDATE "LessonMedia" SET "slideIndex" = -1 WHERE "slideIndex" IS NULL
+    `).catch(() => {});
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "LessonMedia" ALTER COLUMN "slideIndex" SET DEFAULT -1
+    `).catch(() => {});
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "LessonMedia" ALTER COLUMN "slideIndex" SET NOT NULL
+    `).catch(() => {});
     await prisma.$executeRawUnsafe(`
       DO $$ BEGIN
         IF NOT EXISTS (

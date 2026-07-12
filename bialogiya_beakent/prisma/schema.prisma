@@ -119,7 +119,7 @@ model LessonMedia {
   lessonId   String
   lesson     Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   kind       String   // 'story' | 'explainer_slide'
-  slideIndex Int?     // null for 'story', slide position for 'explainer_slide'
+  slideIndex Int      @default(-1) // -1 for 'story'/'voice', slide position (0+) for 'explainer_slide'
   data       Bytes
   mimeType   String   @default("audio/mpeg")
   voice      String?
