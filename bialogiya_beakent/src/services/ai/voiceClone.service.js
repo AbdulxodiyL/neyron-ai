@@ -49,7 +49,7 @@ const deleteVoice = async (voiceId) => {
 
 /**
  * Synthesize speech with a cloned (or any ElevenLabs) voice_id. Returns a
- * Buffer of MP3 audio - same shape as tts.service.js's synthesizeSpeech so
+ * Buffer of MP3 audio - same shape as geminiTts.service.js's synthesizeSpeech so
  * callers can use either interchangeably.
  */
 const synthesizeWithClonedVoice = async (text, voiceId) => {
