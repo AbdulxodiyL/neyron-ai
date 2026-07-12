@@ -206,31 +206,45 @@ function MindMap({ data }) {
   );
 }
 
-// Voice player
-function VoiceSection({ text, title }) {
-  const [playing, setPlaying] = useState(false);
-  const [voices, setVoices] = useState([]);
-  const [selectedVoice, setSelectedVoice] = useState(0);
-  const utterRef = useRef(null);
+// Voice player - Gemini TTS (fixed voice, always good Uzbek pronunciation),
+// same caching pattern as StoryAudioPlayer. Replaces the old browser
+// speechSynthesis version, which depended on whatever voices happened to be
+// installed on the device and often had no decent Uzbek voice at all.
+function VoiceSection({ lessonId, title }) {
+  const audioRef = useRef(null);
+  const objectUrlRef = useRef(null);
+  const [status, setStatus] = useState('idle'); // idle | loading | playing | error
 
   useEffect(() => {
-    const load = () => setVoices(window.speechSynthesis.getVoices());
-    load();
-    window.speechSynthesis.onvoiceschanged = load;
+    return () => { if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current); };
   }, []);
 
-  const speak = () => {
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text || title);
-    utter.rate = 0.9;
-    if (voices[selectedVoice]) utter.voice = voices[selectedVoice];
-    utter.onend = () => setPlaying(false);
-    utterRef.current = utter;
-    window.speechSynthesis.speak(utter);
-    setPlaying(true);
+  const speak = async () => {
+    if (audioRef.current && objectUrlRef.current) {
+      audioRef.current.play();
+      setStatus('playing');
+      return;
+    }
+    setStatus('loading');
+    try {
+      const res = await api.get(`/lessons/${lessonId}/ai/voice-audio`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      objectUrlRef.current = url;
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setStatus('idle');
+      await audio.play();
+      setStatus('playing');
+    } catch (err) {
+      console.error(err);
+      toast.error("Ovozni yuklab bo'lmadi");
+      setStatus('error');
+    }
   };
 
-  const stop = () => { window.speechSynthesis.cancel(); setPlaying(false); };
+  const stop = () => { audioRef.current?.pause(); setStatus('idle'); };
+  const playing = status === 'playing';
+  const loading = status === 'loading';
 
   return (
     <div className="text-center py-8">
@@ -238,27 +252,17 @@ function VoiceSection({ text, title }) {
         <Volume2 size={36} className="text-white" />
       </div>
       <h3 className="font-bold text-gray-800 dark:text-white mb-2">AI Voice Teacher</h3>
-      <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">Listen to the lesson explained aloud. Choose your preferred voice.</p>
-
-      {voices.length > 0 && (
-        <div className="mb-4">
-          <select value={selectedVoice} onChange={e => setSelectedVoice(+e.target.value)}
-            className="input-field max-w-xs mx-auto">
-            {voices.slice(0, 10).map((v, i) => (
-              <option key={i} value={i}>{v.name} ({v.lang})</option>
-            ))}
-          </select>
-        </div>
-      )}
+      <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">Darsni ovozli tinglang — o'zbekcha AI narratsiya.</p>
 
       <div className="flex items-center justify-center gap-3">
         {!playing ? (
-          <button onClick={speak} className="btn-primary flex items-center gap-2">
-            <Play size={16} /> Start Listening
+          <button onClick={speak} disabled={loading} className="btn-primary flex items-center gap-2 disabled:opacity-60">
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+            {loading ? 'Yuklanmoqda...' : 'Tinglashni boshlash'}
           </button>
         ) : (
           <button onClick={stop} className="btn-outline flex items-center gap-2">
-            <Square size={16} /> Stop
+            <Square size={16} /> To'xtatish
           </button>
         )}
       </div>
@@ -568,7 +572,7 @@ export default function LessonDetail() {
             </div>
           )}
           {activeTab === 'mindmap' && <MindMap data={ai?.mindMapData} />}
-          {activeTab === 'voice' && <VoiceSection text={ai?.simpleExplanation} title={lesson?.title} />}
+          {activeTab === 'voice' && <VoiceSection lessonId={id} title={lesson?.title} />}
           {activeTab === 'video' && <ExplainerVideoPlayer lessonId={id} />}
           {activeTab === 'speaking' && <SpeakingPractice lessonId={id} topic={lesson?.title} />}
           {activeTab === 'chat' && <AIChatSection lessonId={id} i18nLanguage={i18n.language} />}

@@ -6,7 +6,7 @@ const { pdfUpload } = require('../middleware/upload.middleware');
 const { createLesson, getLessons, getLessonById, updateLesson, deleteLesson, regenerateAI, getAIContent, generateTestFromPDF } = require('../controllers/lesson.controller');
 const {
   chatMessage, getChatHistory, generateQuizForLesson,
-  getStoryAudio, generateExplainerVideo, getExplainerVideo, getExplainerSlideAudio,
+  getStoryAudio, getVoiceAudio, generateExplainerVideo, getExplainerVideo, getExplainerSlideAudio,
 } = require('../controllers/ai.controller');
 
 router.get('/', verifyToken, getLessons);
@@ -23,6 +23,7 @@ router.get('/:lessonId/quiz/generate', verifyToken, generateQuizForLesson);
 
 // Story narration (audio) and concept/grammar explainer video (slides + audio)
 router.get('/:id/ai/story-audio', verifyToken, getStoryAudio);
+router.get('/:id/ai/voice-audio', verifyToken, getVoiceAudio);
 router.post('/:id/ai/explainer-video', verifyToken, generateExplainerVideo);
 router.get('/:id/ai/explainer-video', verifyToken, getExplainerVideo);
 router.get('/:id/ai/explainer-video/audio/:slideIndex', verifyToken, getExplainerSlideAudio);

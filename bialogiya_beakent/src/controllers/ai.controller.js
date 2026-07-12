@@ -64,6 +64,32 @@ const getStoryAudio = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// GET /api/lessons/:id/ai/voice-audio - TTS narration of the AI-generated
+// "simpleExplanation" text, used by the "AI Voice Teacher" tab. Always uses
+// the fixed Gemini voice (no browser speechSynthesis, no voice picker) so
+// the Uzbek pronunciation is consistent and good quality.
+const getVoiceAudio = async (req, res, next) => {
+  try {
+    const lesson = await prisma.lesson.findUnique({ where: { id: req.params.id } });
+    if (!lesson) return error(res, 'Lesson not found', 404);
+    if (!(await assertLessonAccess(lesson, req.user))) return error(res, 'Forbidden', 403);
+
+    const explanationText = lesson.aiContent?.simpleExplanation || lesson.title;
+    if (!explanationText) return error(res, 'No explanation available for this lesson', 404);
+
+    const cached = await prisma.lessonMedia.findUnique({
+      where: { lessonId_kind_slideIndex: { lessonId: lesson.id, kind: 'voice', slideIndex: null } },
+    });
+    if (cached) return streamAudioBuffer(res, cached.data, cached.mimeType);
+
+    const { buffer: audio, mimeType } = await synthesizeForLesson(lesson.teacherId, explanationText);
+    const saved = await prisma.lessonMedia.create({
+      data: { lessonId: lesson.id, kind: 'voice', slideIndex: null, data: audio, mimeType },
+    });
+    return streamAudioBuffer(res, saved.data, saved.mimeType);
+  } catch (err) { next(err); }
+};
+
 // POST /api/lessons/:id/ai/explainer-video - generate (or regenerate) the
 // slide script for the concept/grammar explainer. Slide audio is generated
 // lazily per-slide the first time it's played (see getExplainerSlideAudio).
@@ -193,5 +219,5 @@ const markNotifRead = async (req, res, next) => {
 
 module.exports = {
   chatMessage, getChatHistory, generateQuizForLesson, getNotifications, markNotifRead,
-  getStoryAudio, generateExplainerVideo, getExplainerVideo, getExplainerSlideAudio,
+  getStoryAudio, getVoiceAudio, generateExplainerVideo, getExplainerVideo, getExplainerSlideAudio,
 };
