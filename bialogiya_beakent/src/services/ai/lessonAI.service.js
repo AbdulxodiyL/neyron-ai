@@ -1,6 +1,7 @@
 const { getModel } = require('../../config/gemini');
 const { prisma } = require('../../config/db');
 const { LESSON_SYSTEM_PROMPT, getLessonGenerationPrompt } = require('./prompts');
+const { sanitizeAiContent } = require('../../utils/sanitizeAiText');
 
 const generateLessonAI = async (lessonId, title, content, language = 'uz') => {
   await prisma.lesson.update({ where: { id: lessonId }, data: { aiContent: { status: 'generating' } } });
@@ -10,7 +11,7 @@ const generateLessonAI = async (lessonId, title, content, language = 'uz') => {
     const prompt = `${LESSON_SYSTEM_PROMPT}\n\n${getLessonGenerationPrompt(title, content || title, language)}`;
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    const parsed = JSON.parse(text);
+    const parsed = sanitizeAiContent(JSON.parse(text));
 
     await prisma.lesson.update({
       where: { id: lessonId },
@@ -20,7 +21,7 @@ const generateLessonAI = async (lessonId, title, content, language = 'uz') => {
           simpleExplanation: parsed.simpleExplanation || '',
           mnemonics: parsed.mnemonics || '',
           storyMode: parsed.storyMode || '',
-          realLifeExamples: parsed.realLifeExamples || '',
+          realLifeExamples: parsed.realLifeExamples || [],
           summary: parsed.summary || '',
           flashcards: parsed.flashcards || [],
           mindMapData: parsed.mindMapData || { nodes: [], edges: [] },

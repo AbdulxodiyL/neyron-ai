@@ -11,16 +11,25 @@ const getLessonGenerationPrompt = (title, content, language = 'uz') => {
 
   return `${langInstructions[language] || langInstructions['uz']}
 
+IMPORTANT FORMATTING RULE: Never use markdown syntax anywhere in the JSON
+values below - no **bold**, no # headers, no markdown bullets like "- " or
+"* ". Write plain, clean text. Wherever a field should contain multiple
+items, use the JSON array structure specified for that field instead of
+embedding a formatted list inside a single string.
+
 Lesson Title: "${title}"
 Lesson Content: "${content}"
 
 Generate comprehensive educational materials in JSON format with these exact keys:
 {
-  "simpleExplanation": "Very simple explanation using easy words, suitable for a 13-year-old student",
-  "mnemonics": "Memory tricks and memorable analogies to help remember this topic. Use examples like DNA=Recipe Book, RNA=Messenger, etc.",
-  "storyMode": "Convert this lesson into an engaging short story that makes the concepts memorable and fun",
-  "realLifeExamples": "3-5 real-life examples showing how this topic appears in everyday life, medicine, nature, or technology",
-  "summary": "A concise one-page summary with key points, definitions, and main concepts",
+  "simpleExplanation": "Very simple explanation using easy words, suitable for a 13-year-old student. Plain text, no markdown.",
+  "mnemonics": "Memory tricks and memorable analogies to help remember this topic. Use examples like DNA=Recipe Book, RNA=Messenger, etc. Plain text, no markdown.",
+  "storyMode": "Convert this lesson into an engaging short story that makes the concepts memorable and fun. Plain text, no markdown.",
+  "realLifeExamples": [
+    {"category": "short category label, e.g. 'Everyday habits'", "example": "one clear real-life example sentence or two, plain text, no markdown"},
+    ... (generate 4-5 of these, each a distinct category)
+  ],
+  "summary": "A concise one-page summary with key points, definitions, and main concepts. Plain text, no markdown.",
   "flashcards": [
     {"front": "Question or term", "back": "Answer or definition"},
     ... (generate 8-12 flashcards)
@@ -152,7 +161,8 @@ Rules:
 - 5-8 slides total.
 - Each slide: 2-4 short bullets (max ~8 words each) and one narration block.
 - The last slide must be a short summary/recap.
-- Narration must sound natural when read aloud, not like a list.`;
+- Narration must sound natural when read aloud, not like a list.
+- Do not use markdown syntax anywhere (no **bold**, no # headers, no "- " list markers) - plain text only in every field.`;
 };
 
 const getSpeakingCoachInstructions = (topic, language = 'uz', level = 'intermediate') => {

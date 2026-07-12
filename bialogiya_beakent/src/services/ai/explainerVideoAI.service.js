@@ -1,11 +1,12 @@
 const { getModel } = require('../../config/gemini');
 const { getExplainerVideoPrompt } = require('./prompts');
+const { sanitizeAiContent } = require('../../utils/sanitizeAiText');
 
 const generateExplainerScript = async (title, content, language = 'uz') => {
   const model = getModel(true);
   const prompt = getExplainerVideoPrompt(title, content, language);
   const result = await model.generateContent(prompt);
-  const parsed = JSON.parse(result.response.text());
+  const parsed = sanitizeAiContent(JSON.parse(result.response.text()));
 
   const slides = Array.isArray(parsed.slides) ? parsed.slides.slice(0, 8) : [];
   if (slides.length === 0) throw new Error('AI did not return any slides');

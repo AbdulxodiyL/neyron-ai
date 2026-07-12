@@ -544,7 +544,19 @@ export default function LessonDetail() {
           {activeTab === 'examples' && (
             <div>
               <h2 className="text-lg font-bold mb-4 gradient-text">Real-Life Examples</h2>
-              <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{ai?.realLifeExamples}</div>
+              {Array.isArray(ai?.realLifeExamples) ? (
+                <div className="space-y-3">
+                  {ai.realLifeExamples.map((ex, i) => (
+                    <div key={i} className="rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-primary mb-1.5">{ex.category}</div>
+                      <div className="text-gray-700 dark:text-gray-300 leading-relaxed">{ex.example}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Lessons generated before this format change still have a plain string - show as-is.
+                <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">{ai?.realLifeExamples}</div>
+              )}
             </div>
           )}
           {activeTab === 'quiz' && <QuizSection questions={ai?.quizQuestions} />}
