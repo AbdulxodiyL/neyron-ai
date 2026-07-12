@@ -550,12 +550,20 @@ export default function LessonDetail() {
               <h2 className="text-lg font-bold mb-4 gradient-text">Real-Life Examples</h2>
               {Array.isArray(ai?.realLifeExamples) ? (
                 <div className="space-y-3">
-                  {ai.realLifeExamples.map((ex, i) => (
-                    <div key={i} className="rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
-                      <div className="text-xs font-semibold uppercase tracking-wide text-primary mb-1.5">{ex.category}</div>
-                      <div className="text-gray-700 dark:text-gray-300 leading-relaxed">{ex.example}</div>
-                    </div>
-                  ))}
+                  {ai.realLifeExamples.map((ex, i) => {
+                    // Some older lessons have plain strings in the array
+                    // instead of {category, example} objects - handle both.
+                    const isObj = ex && typeof ex === 'object';
+                    const category = isObj ? ex.category : null;
+                    const text = isObj ? ex.example : ex;
+                    if (!text) return null;
+                    return (
+                      <div key={i} className="rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
+                        {category && <div className="text-xs font-semibold uppercase tracking-wide text-primary mb-1.5">{category}</div>}
+                        <div className="text-gray-700 dark:text-gray-300 leading-relaxed">{text}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 // Lessons generated before this format change still have a plain string - show as-is.
