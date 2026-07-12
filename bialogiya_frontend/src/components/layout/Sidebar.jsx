@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, BookOpen, ClipboardList, FileText, BarChart2,
   Users, FolderOpen, Calendar, Trophy, Star, Settings,
-  GraduationCap, BookMarked, UserCheck, Upload, 
+  GraduationCap, BookMarked, UserCheck, Upload, Mic,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { getLevelProgress } from '../../utils/format';
@@ -33,6 +33,7 @@ const teacherLinks = [
   { to: '/teacher/tests', icon: FileText, key: 'tests' },
   { to: '/teacher/attendance', icon: Calendar, key: 'attendance' },
   { to: '/teacher/resources', icon: Upload, key: 'resources' },
+  { to: '/teacher/voice', icon: Mic, key: 'voice' },
   { to: '/teacher/analytics', icon: BarChart2, key: 'analytics' },
 ];
 

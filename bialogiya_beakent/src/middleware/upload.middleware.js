@@ -68,7 +68,19 @@ const resourceUpload = multer({
   limits: { fileSize: maxSize },
 });
 
+// Memory storage for voice-clone sample uploads (short audio recordings)
+const audioMimes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/webm', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/ogg'];
+const voiceSampleUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    if (audioMimes.includes(file.mimetype)) cb(null, true);
+    else cb(new Error(`Qo'llab-quvvatlanmaydigan audio turi: ${file.mimetype}`), false);
+  },
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB is plenty for a 1-3 min sample
+});
+
 module.exports = upload;
 module.exports.pdfUpload = fileUpload;
 module.exports.fileUpload = fileUpload;
 module.exports.resourceUpload = resourceUpload;
+module.exports.voiceSampleUpload = voiceSampleUpload;

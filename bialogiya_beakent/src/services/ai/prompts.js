@@ -120,4 +120,59 @@ Analyze the results and respond in JSON:
 }`;
 };
 
-module.exports = { LESSON_SYSTEM_PROMPT, getLessonGenerationPrompt, getChatSystemPrompt, getGradingPrompt, getResultAnalysisPrompt };
+const getExplainerVideoPrompt = (title, content, language = 'uz') => {
+  const langInstructions = {
+    uz: "Barcha matnlarni O'zbek tilida yozing.",
+    ru: 'Все тексты пишите на Русском языке.',
+    en: 'Write all text in English.',
+  };
+
+  return `${langInstructions[language] || langInstructions['uz']}
+
+You are creating a short narrated "video" (a slide-by-slide explainer) that teaches this topic clearly, the way a patient teacher would on a whiteboard.
+
+Topic: "${title}"
+Source content: "${(content || title).slice(0, 2500)}"
+
+Break the topic into 5-8 slides that build on each other logically (definition → rule/mechanism → examples → common mistakes → summary).
+
+Return valid JSON with this exact shape:
+{
+  "topic": "short topic title",
+  "slides": [
+    {
+      "title": "short slide heading (max 6 words)",
+      "bullets": ["short bullet point", "short bullet point", "..."],
+      "narration": "what the narrator says out loud for this slide - natural spoken sentences, 2-4 sentences, matching and expanding on the bullets, suitable for text-to-speech"
+    }
+  ]
+}
+
+Rules:
+- 5-8 slides total.
+- Each slide: 2-4 short bullets (max ~8 words each) and one narration block.
+- The last slide must be a short summary/recap.
+- Narration must sound natural when read aloud, not like a list.`;
+};
+
+const getSpeakingCoachInstructions = (topic, language = 'uz', level = 'intermediate') => {
+  const langNote = {
+    uz: "Talaba bilan asosan O'zbek tilida gaplashing, lekin agar mavzu chet tili (masalan ingliz tili) bo'lsa, o'sha tilda gapirtiring.",
+    ru: 'Общайтесь с учеником в основном на Русском языке.',
+    en: 'Speak with the student mainly in English.',
+  };
+
+  return `You are a strict, no-nonsense speaking coach for the topic: "${topic || 'general conversation practice'}".
+Student level: ${level}.
+${langNote[language] || langNote['uz']}
+
+Your job:
+- Have a real spoken conversation with the student to practice speaking.
+- The moment the student makes a grammar, pronunciation, word-choice, or fluency mistake, interrupt the flow briefly to correct it directly and clearly - do not let mistakes slide by uncorrected and do not soften the correction into vagueness.
+- State plainly what was wrong and give the correct version, then have the student repeat the corrected version before continuing.
+- Be honest and direct about mistakes - this is what the student explicitly asked for - but stay respectful and constructive, never mocking, insulting, or demeaning. Correct the language, not the person.
+- After corrections, keep the conversation moving naturally so the student gets real practice, not just a lecture.
+- Keep each of your turns short (1-3 sentences) so the student talks more than you do.`;
+};
+
+module.exports = { LESSON_SYSTEM_PROMPT, getLessonGenerationPrompt, getChatSystemPrompt, getGradingPrompt, getResultAnalysisPrompt, getExplainerVideoPrompt, getSpeakingCoachInstructions };
