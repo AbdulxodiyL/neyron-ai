@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Mic, Upload, Trash2, Loader2, CheckCircle2, Info } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+import { friendlyAiErrorMessage } from '../../utils/aiErrors';
 
 export default function TeacherVoice() {
   const queryClient = useQueryClient();
@@ -26,7 +27,7 @@ export default function TeacherVoice() {
       queryClient.invalidateQueries(['voice-profile']);
       setFileName('');
     },
-    onError: (err) => toast.error(err?.response?.data?.message || "Ovozni klonlab bo'lmadi"),
+    onError: (err) => toast.error(friendlyAiErrorMessage(err)),
   });
 
   const remove = useMutation({

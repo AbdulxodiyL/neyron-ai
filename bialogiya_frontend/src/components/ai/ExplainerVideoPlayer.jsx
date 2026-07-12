@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Loader2, Clapperboard, ChevronLeft, ChevronRight, RotateCcw, Volume2, VolumeX, ImageOff } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+import { friendlyAiErrorMessage } from '../../utils/aiErrors';
 
 const formatTime = (s) => {
   if (!Number.isFinite(s)) return '0:00';
@@ -26,6 +27,7 @@ export default function ExplainerVideoPlayer({ lessonId }) {
   const [muted, setMuted] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const [imageStatus, setImageStatus] = useState('idle'); // idle | loading | ready | error
+  const [imageError, setImageError] = useState('');
 
   const { data: script, isLoading } = useQuery({
     queryKey: ['explainer-video', lessonId],
@@ -40,7 +42,7 @@ export default function ExplainerVideoPlayer({ lessonId }) {
       imageCacheRef.current.clear();
       setSlideIdx(0);
     },
-    onError: () => toast.error("Video skripti yaratib bo'lmadi. Qayta urinib ko'ring."),
+    onError: (err) => toast.error(friendlyAiErrorMessage(err)),
   });
 
   const slides = script?.slides || [];
@@ -64,6 +66,7 @@ export default function ExplainerVideoPlayer({ lessonId }) {
     } catch (err) {
       console.error(err);
       setImageStatus('error');
+      setImageError(friendlyAiErrorMessage(err));
     }
   }, [lessonId]);
 
@@ -108,7 +111,7 @@ export default function ExplainerVideoPlayer({ lessonId }) {
       setPlaying(true);
     } catch (err) {
       console.error(err);
-      toast.error("Ovozni yuklab bo'lmadi");
+      toast.error(friendlyAiErrorMessage(err));
     } finally {
       setAudioLoading(false);
     }
@@ -179,8 +182,9 @@ export default function ExplainerVideoPlayer({ lessonId }) {
             {imageStatus === 'ready' && imageUrl ? (
               <img src={imageUrl} alt={slide?.title} className="absolute inset-0 w-full h-full object-cover" />
             ) : imageStatus === 'error' ? (
-              <div className="absolute inset-0 gradient-bg flex items-center justify-center">
+              <div className="absolute inset-0 gradient-bg flex flex-col items-center justify-center gap-2 px-6 text-center">
                 <ImageOff size={32} className="text-white/50" />
+                <p className="text-white/80 text-xs">{imageError}</p>
               </div>
             ) : (
               <div className="absolute inset-0 gradient-bg animate-pulse" />

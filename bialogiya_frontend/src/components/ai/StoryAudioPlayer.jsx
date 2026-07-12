@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Play, Pause, Loader2, Volume2, RotateCcw } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+import { friendlyAiErrorMessage } from '../../utils/aiErrors';
 
 const formatTime = (s) => {
   if (!Number.isFinite(s)) return '0:00';
@@ -44,7 +45,7 @@ export default function StoryAudioPlayer({ lessonId }) {
       setStatus('playing');
     } catch (err) {
       console.error(err);
-      toast.error("Audio yaratib bo'lmadi. Birozdan so'ng qayta urinib ko'ring.");
+      toast.error(friendlyAiErrorMessage(err));
       setStatus('error');
     }
   };

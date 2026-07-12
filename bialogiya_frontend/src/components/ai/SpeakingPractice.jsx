@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, PhoneOff, Loader2, Radio, User, Bot } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+import { friendlyAiErrorMessage } from '../../utils/aiErrors';
 
 const STATUS = { IDLE: 'idle', CONNECTING: 'connecting', CONNECTED: 'connected', ERROR: 'error' };
 
@@ -201,7 +202,7 @@ export default function SpeakingPractice({ lessonId, topic }) {
       };
     } catch (err) {
       console.error(err);
-      toast.error("Speaking sessiyasini boshlab bo'lmadi");
+      toast.error(friendlyAiErrorMessage(err));
       cleanup();
       setStatus(STATUS.ERROR);
     }
