@@ -41,17 +41,24 @@ import TeacherVoice from './pages/teacher/TeacherVoice';
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminTeachers from './pages/admin/AdminTeachers';
+import AdminReception from './pages/admin/AdminReception';
 import AdminStudents from './pages/admin/AdminStudents';
 import AdminGroups from './pages/admin/AdminGroups';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
 
+// Reception pages
+import ReceptionTeachers from './pages/reception/ReceptionTeachers';
+import ReceptionPayments from './pages/reception/ReceptionPayments';
+
 const ProtectedRoute = ({ children, role }) => {
   const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (role && user?.role !== role) {
+  const allowedRoles = Array.isArray(role) ? role : role ? [role] : null;
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
     if (user?.role === 'student') return <Navigate to="/student/dashboard" replace />;
     if (user?.role === 'teacher') return <Navigate to="/teacher/dashboard" replace />;
+    if (user?.role === 'reception') return <Navigate to="/reception/teachers" replace />;
     if (user?.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
   }
   return children;
@@ -68,6 +75,7 @@ export default function App() {
         <Route path="/" element={
           user?.role === 'student' ? <Navigate to="/student/dashboard" replace /> :
           user?.role === 'teacher' ? <Navigate to="/teacher/dashboard" replace /> :
+          user?.role === 'reception' ? <Navigate to="/reception/teachers" replace /> :
           user?.role === 'admin' ? <Navigate to="/admin/dashboard" replace /> :
           <Navigate to="/login" replace />
         } />
@@ -115,9 +123,16 @@ export default function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="teachers" element={<AdminTeachers />} />
+          <Route path="reception" element={<AdminReception />} />
           <Route path="students" element={<AdminStudents />} />
           <Route path="groups" element={<AdminGroups />} />
           <Route path="settings" element={<AdminSettings />} />
+        </Route>
+
+        {/* Reception Routes */}
+        <Route path="/reception" element={<ProtectedRoute role="reception"><MainLayout /></ProtectedRoute>}>
+          <Route path="teachers" element={<ReceptionTeachers />} />
+          <Route path="payments" element={<ReceptionPayments />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

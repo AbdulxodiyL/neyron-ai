@@ -23,6 +23,7 @@ export default function LoginPage() {
       toast.success(`Welcome, ${user.name}!`);
       if (user.role === 'student') navigate('/student/dashboard');
       else if (user.role === 'teacher') navigate('/teacher/dashboard');
+      else if (user.role === 'reception') navigate('/reception/teachers');
       else navigate('/admin/dashboard');
     },
     onError: (err) => toast.error(err.response?.data?.message || t('invalid_credentials')),
@@ -78,7 +79,7 @@ export default function LoginPage() {
               transition={{ delay: 0.1 }}
               className="inline-flex items-center justify-center w-16 h-16 gradient-bg rounded-2xl shadow-glow mb-4"
             >
-              <span className="text-white font-black text-2xl">N</span>
+              <span className="text-white font-black text-2xl">A</span>
             </motion.div>
             <h1 className="text-2xl font-black gradient-text">{t('app_name')}</h1>
             <p className="text-sm text-gray-500 mt-1">{t('tagline')}</p>
@@ -142,15 +143,6 @@ export default function LoginPage() {
             </motion.button>
           </form>
 
-          {/* Demo info */}
-          <div className="mt-6 p-3 bg-primary/5 border border-primary/20 rounded-xl">
-            <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-1">🔑 Demo credentials:</p>
-            <div className="text-xs text-gray-500 space-y-0.5">
-              <div>Admin: <code className="text-primary font-mono">admin</code> / <code className="text-primary font-mono">admin123</code></div>
-              <div>Teacher: <code className="text-secondary font-mono">teacher</code> / <code className="text-secondary font-mono">teacher123</code></div>
-              <div>Student: <code className="text-gray-600 font-mono">student</code> / <code className="text-gray-600 font-mono">student123</code></div>
-            </div>
-          </div>
         </div>
 
         {/* Bottom badges */}

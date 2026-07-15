@@ -121,6 +121,12 @@ const runMigrations = async () => {
       ADD COLUMN IF NOT EXISTS "clonedVoiceName" TEXT
     `);
 
+    // Add 'reception' to the Role enum (admin-only role: can create teacher
+    // accounts and manage student payments, nothing else).
+    await prisma.$executeRawUnsafe(`
+      ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'reception'
+    `).catch(() => {});
+
     console.log('✅ Schema migrations applied');
   } catch (err) {
     console.warn('⚠️  Migration warning (non-fatal):', err.message);

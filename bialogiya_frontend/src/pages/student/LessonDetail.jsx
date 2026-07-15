@@ -330,7 +330,7 @@ function AIChatSection({ lessonId, i18nLanguage }) {
         {messages.length === 0 && (
           <div className="text-center py-8 text-gray-400">
             <MessageSquare size={32} className="mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Ask NEYRON AI anything about this lesson</p>
+            <p className="text-sm">Ask Abdora AI anything about this lesson</p>
           </div>
         )}
         {messages.map((m, i) => (

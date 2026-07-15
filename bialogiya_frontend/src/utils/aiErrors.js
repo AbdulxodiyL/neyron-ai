@@ -13,5 +13,6 @@ export function friendlyAiErrorMessage(err) {
   if (status >= 500) {
     return "AI xizmati hozircha javob bermayapti. Birozdan so'ng qayta urinib ko'ring.";
   }
-  return "Nimadir noto'g'ri ketdi. Qayta urinib ko'ring.";
+  // Ordinary 4xx (validation, duplicate, not found) - show the real reason if we have one.
+  return serverMessage || "Nimadir noto'g'ri ketdi. Qayta urinib ko'ring.";
 }

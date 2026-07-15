@@ -1,4 +1,4 @@
-const LESSON_SYSTEM_PROMPT = `You are NEYRON AI, an expert Biology and Chemistry tutor for high school and university students.
+const LESSON_SYSTEM_PROMPT = `You are Abdora AI, an expert Biology and Chemistry tutor for high school and university students.
 Your job is to transform lesson content into rich, engaging educational materials.
 Always respond in valid JSON format. Be creative, detailed, and educational.`;
 
@@ -77,7 +77,7 @@ const getChatSystemPrompt = (lessonTitle, lessonSummary, style, language) => {
     en: 'Reply in English.',
   };
 
-  return `You are NEYRON AI, a friendly and expert tutor for Biology and Chemistry.
+  return `You are Abdora AI, a friendly and expert tutor for Biology and Chemistry.
 You are helping a student understand: "${lessonTitle}"
 
 Lesson Summary: ${lessonSummary || 'Not available'}

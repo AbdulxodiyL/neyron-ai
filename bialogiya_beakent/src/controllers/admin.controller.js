@@ -78,6 +78,46 @@ const deleteTeacher = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// Reception accounts can only be created by admin - there is no self-registration
+// and reception users cannot create other reception users.
+const getReceptionUsers = async (req, res, next) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: { role: 'reception' },
+      select: { id: true, name: true, username: true, email: true, phone: true, isActive: true, createdAt: true, lastLogin: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return success(res, users);
+  } catch (err) { next(err); }
+};
+
+const createReceptionUser = async (req, res, next) => {
+  try {
+    const { name, email, phone, language } = req.body;
+    if (!name) return error(res, 'Name required', 400);
+
+    const username = generateUsername(name);
+    const password = generatePassword(8);
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: { name, email, phone: phone || null, username, passwordHash, role: 'reception', language: language || 'uz' },
+      select: { id: true, name: true, username: true, email: true, phone: true, role: true, createdAt: true },
+    });
+
+    return success(res, { user, credentials: { username, password } }, 'Reception user created', 201);
+  } catch (err) { next(err); }
+};
+
+const deleteReceptionUser = async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!user || user.role !== 'reception') return error(res, 'Reception user not found', 404);
+    await prisma.user.update({ where: { id: req.params.id }, data: { isActive: false } });
+    return success(res, null, 'Reception user deactivated');
+  } catch (err) { next(err); }
+};
+
 const getStudents = async (req, res, next) => {
   try {
     const students = await prisma.user.findMany({
@@ -120,4 +160,7 @@ const updateSettings = async (req, res, next) => {
   catch (err) { next(err); }
 };
 
-module.exports = { getStats, getTeachers, createTeacher, updateTeacher, deleteTeacher, getStudents, getGroups, toggleUserStatus, getSettings, updateSettings };
+module.exports = {
+  getStats, getTeachers, createTeacher, updateTeacher, deleteTeacher, getStudents, getGroups, toggleUserStatus, getSettings, updateSettings,
+  getReceptionUsers, createReceptionUser, deleteReceptionUser,
+};

@@ -50,7 +50,7 @@ app.use('/api', require('./src/routes/index'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date(), service: 'NEYRON AI Backend' });
+  res.json({ status: 'ok', timestamp: new Date(), service: 'Abdora AI Backend' });
 });
 
 // Global error handler
@@ -58,7 +58,7 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`\n🚀 NEYRON AI Server running on http://localhost:${PORT}`);
+  console.log(`\n🚀 Abdora AI Server running on http://localhost:${PORT}`);
   console.log(`📚 Environment: ${process.env.NODE_ENV}`);
   console.log(`🤖 OpenAI Model: ${process.env.OPENAI_MODEL || 'gpt-4o'}\n`);
 });

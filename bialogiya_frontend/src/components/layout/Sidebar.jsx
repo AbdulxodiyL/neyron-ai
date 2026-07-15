@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, BookOpen, ClipboardList, FileText, BarChart2,
   Users, FolderOpen, Calendar, Trophy, Star, Settings,
-  GraduationCap, BookMarked, UserCheck, Upload, Mic,
+  GraduationCap, BookMarked, UserCheck, Upload, Mic, Wallet, UserCog,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { getLevelProgress } from '../../utils/format';
@@ -41,15 +41,24 @@ const adminLinks = [
   { to: '/admin/dashboard', icon: LayoutDashboard, key: 'dashboard' },
   { to: '/admin/users', icon: UserCheck, key: 'users' },
   { to: '/admin/teachers', icon: BookMarked, key: 'teachers' },
+  { to: '/admin/reception', icon: UserCog, key: 'reception' },
   { to: '/admin/students', icon: GraduationCap, key: 'students' },
   { to: '/admin/groups', icon: Users, key: 'groups' },
   { to: '/admin/settings', icon: Settings, key: 'settings' },
 ];
 
+const receptionLinks = [
+  { to: '/reception/teachers', icon: BookMarked, key: 'teachers' },
+  { to: '/reception/payments', icon: Wallet, key: 'payments' },
+];
+
 export default function Sidebar({ isOpen, onClose }) {
   const { user } = useAuthStore();
   const { t } = useTranslation();
-  const links = user?.role === 'student' ? studentLinks : user?.role === 'teacher' ? teacherLinks : adminLinks;
+  const links = user?.role === 'student' ? studentLinks
+    : user?.role === 'teacher' ? teacherLinks
+    : user?.role === 'reception' ? receptionLinks
+    : adminLinks;
   const { level, progress } = getLevelProgress(user?.xp || 0);
 
   return (
@@ -64,11 +73,11 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Logo */}
       <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-glow">N</div>
+          <div className="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-glow">A</div>
           <div>
             <div className="font-bold text-gray-900 dark:text-white text-sm">{t('app_name')}</div>
             <div className="text-xs text-gray-400">
-              {user?.role === 'student' ? 'Student' : user?.role === 'teacher' ? 'Teacher' : 'Admin'}
+              {user?.role === 'student' ? 'Student' : user?.role === 'teacher' ? 'Teacher' : user?.role === 'reception' ? 'Reception' : 'Admin'}
             </div>
           </div>
         </div>

@@ -23,7 +23,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="gradient-bg rounded-3xl p-6 text-white">
         <h1 className="text-2xl font-black">Admin Panel</h1>
-        <p className="text-white/70 text-sm mt-1">NEYRON AI — Platform Overview</p>
+        <p className="text-white/70 text-sm mt-1">Abdora AI — Platform Overview</p>
       </div>
 
       {/* Stats grid */}

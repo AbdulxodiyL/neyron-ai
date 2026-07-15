@@ -6,7 +6,7 @@ import api from '../../config/axios';
 import toast from 'react-hot-toast';
 
 export default function AdminSettings() {
-  const [settings, setSettings] = useState({ platformName: 'NEYRON AI', defaultLanguage: 'uz', aiEnabled: true, registrationOpen: false, maxGroupSize: 30, passingScore: 60 });
+  const [settings, setSettings] = useState({ platformName: 'Abdora AI', defaultLanguage: 'uz', aiEnabled: true, registrationOpen: false, maxGroupSize: 30, passingScore: 60 });
 
   const saveMutation = useMutation({
     mutationFn: (d) => api.put('/admin/settings', d),
