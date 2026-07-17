@@ -1,0 +1,148 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './store/authStore';
+import MainLayout from './components/layout/MainLayout';
+
+// Auth
+import LoginPage from './pages/auth/LoginPage';
+
+// Student pages
+import StudentDashboard from './pages/student/StudentDashboard';
+import StudentLessons from './pages/student/StudentLessons';
+import LessonDetail from './pages/student/LessonDetail';
+import StudentHomework from './pages/student/StudentHomework';
+import HomeworkSubmit from './pages/student/HomeworkSubmit';
+import StudentTests from './pages/student/StudentTests';
+import TestRunner from './pages/student/TestRunner';
+import StudentResults from './pages/student/StudentResults';
+import StudentResources from './pages/student/StudentResources';
+import StudentAttendance from './pages/student/StudentAttendance';
+import StudentAchievements from './pages/student/StudentAchievements';
+import StudentLeaderboard from './pages/student/StudentLeaderboard';
+import StudentAnalytics from './pages/student/StudentAnalytics';
+
+// Teacher pages
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import ManageGroups from './pages/teacher/ManageGroups';
+import GroupDetail from './pages/teacher/GroupDetail';
+import ManageStudents from './pages/teacher/ManageStudents';
+import ManageLessons from './pages/teacher/ManageLessons';
+import CreateLesson from './pages/teacher/CreateLesson';
+import ManageHomework from './pages/teacher/ManageHomework';
+import CreateHomework from './pages/teacher/CreateHomework';
+import GradeSubmissions from './pages/teacher/GradeSubmissions';
+import ManageTests from './pages/teacher/ManageTests';
+import CreateTest from './pages/teacher/CreateTest';
+import TestResultsPage from './pages/teacher/TestResultsPage';
+import AttendancePage from './pages/teacher/AttendancePage';
+import TeacherResources from './pages/teacher/TeacherResources';
+import TeacherAnalytics from './pages/teacher/TeacherAnalytics';
+import TeacherVoice from './pages/teacher/TeacherVoice';
+
+// Admin pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminTeachers from './pages/admin/AdminTeachers';
+import AdminReception from './pages/admin/AdminReception';
+import AdminStudents from './pages/admin/AdminStudents';
+import AdminGroups from './pages/admin/AdminGroups';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminSettings from './pages/admin/AdminSettings';
+
+// Reception pages
+import ReceptionTeachers from './pages/reception/ReceptionTeachers';
+import ReceptionStudents from './pages/reception/ReceptionStudents';
+import ReceptionGroups from './pages/reception/ReceptionGroups';
+import ReceptionGroupDetail from './pages/reception/ReceptionGroupDetail';
+import ReceptionPayments from './pages/reception/ReceptionPayments';
+
+const ProtectedRoute = ({ children, role }) => {
+  const { isAuthenticated, user } = useAuthStore();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  const allowedRoles = Array.isArray(role) ? role : role ? [role] : null;
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+    if (user?.role === 'student') return <Navigate to="/student/dashboard" replace />;
+    if (user?.role === 'teacher') return <Navigate to="/teacher/dashboard" replace />;
+    if (user?.role === 'reception') return <Navigate to="/reception/teachers" replace />;
+    if (user?.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  }
+  return children;
+};
+
+export default function App() {
+  const { user } = useAuthStore();
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+
+        <Route path="/" element={
+          user?.role === 'student' ? <Navigate to="/student/dashboard" replace /> :
+          user?.role === 'teacher' ? <Navigate to="/teacher/dashboard" replace /> :
+          user?.role === 'reception' ? <Navigate to="/reception/teachers" replace /> :
+          user?.role === 'admin' ? <Navigate to="/admin/dashboard" replace /> :
+          <Navigate to="/login" replace />
+        } />
+
+        {/* Student Routes */}
+        <Route path="/student" element={<ProtectedRoute role="student"><MainLayout /></ProtectedRoute>}>
+          <Route path="dashboard" element={<StudentDashboard />} />
+          <Route path="lessons" element={<StudentLessons />} />
+          <Route path="lessons/:id" element={<LessonDetail />} />
+          <Route path="homework" element={<StudentHomework />} />
+          <Route path="homework/:id/submit" element={<HomeworkSubmit />} />
+          <Route path="tests" element={<StudentTests />} />
+          <Route path="tests/:id/run" element={<TestRunner />} />
+          <Route path="results" element={<StudentResults />} />
+          <Route path="resources" element={<StudentResources />} />
+          <Route path="attendance" element={<StudentAttendance />} />
+          <Route path="achievements" element={<StudentAchievements />} />
+          <Route path="leaderboard" element={<StudentLeaderboard />} />
+          <Route path="analytics" element={<StudentAnalytics />} />
+        </Route>
+
+        {/* Teacher Routes */}
+        <Route path="/teacher" element={<ProtectedRoute role="teacher"><MainLayout /></ProtectedRoute>}>
+          <Route path="dashboard" element={<TeacherDashboard />} />
+          <Route path="groups" element={<ManageGroups />} />
+          <Route path="groups/:id" element={<GroupDetail />} />
+          <Route path="students" element={<ManageStudents />} />
+          <Route path="lessons" element={<ManageLessons />} />
+          <Route path="lessons/create" element={<CreateLesson />} />
+          <Route path="lessons/:id/edit" element={<CreateLesson />} />
+          <Route path="homework" element={<ManageHomework />} />
+          <Route path="homework/create" element={<CreateHomework />} />
+          <Route path="homework/:id/submissions" element={<GradeSubmissions />} />
+          <Route path="tests" element={<ManageTests />} />
+          <Route path="tests/create" element={<CreateTest />} />
+          <Route path="tests/:id/results" element={<TestResultsPage />} />
+          <Route path="attendance" element={<AttendancePage />} />
+          <Route path="resources" element={<TeacherResources />} />
+          <Route path="analytics" element={<TeacherAnalytics />} />
+          <Route path="voice" element={<TeacherVoice />} />
+        </Route>
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<ProtectedRoute role="admin"><MainLayout /></ProtectedRoute>}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="teachers" element={<AdminTeachers />} />
+          <Route path="reception" element={<AdminReception />} />
+          <Route path="students" element={<AdminStudents />} />
+          <Route path="groups" element={<AdminGroups />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
+
+        {/* Reception Routes */}
+        <Route path="/reception" element={<ProtectedRoute role="reception"><MainLayout /></ProtectedRoute>}>
+          <Route path="teachers" element={<ReceptionTeachers />} />
+          <Route path="students" element={<ReceptionStudents />} />
+          <Route path="groups" element={<ReceptionGroups />} />
+          <Route path="groups/:id" element={<ReceptionGroupDetail />} />
+          <Route path="payments" element={<ReceptionPayments />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
