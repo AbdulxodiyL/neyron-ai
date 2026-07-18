@@ -202,6 +202,14 @@ export default function Topbar({ onMenuClick }) {
                     <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">Oxirgi to'lov: {new Date(user.lastPaymentAt).toLocaleDateString()}</div>
                   )}
                 </div>
+                {/* Full profile page */}
+                <button
+                  onClick={() => { setShowProfile(false); navigate('/profile'); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <User size={14} className="text-primary" />
+                  Mening profilim
+                </button>
                 {/* Change password */}
                 <button
                   onClick={() => { setShowProfile(false); setShowChangePw(true); }}

@@ -66,10 +66,10 @@ const getAllUsers = async (req, res, next) => {
 
 const updateProfile = async (req, res, next) => {
   try {
-    const { name, language, avatar } = req.body;
+    const { name, language, avatar, phone } = req.body;
     const user = await prisma.user.update({
       where: { id: req.user.userId },
-      data: { name, language, avatar },
+      data: { name, language, avatar, phone },
     });
     return success(res, safeUser(user));
   } catch (err) { next(err); }

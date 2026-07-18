@@ -48,11 +48,13 @@ const adminLinks = [
 ];
 
 const receptionLinks = [
+  { to: '/reception/dashboard', icon: LayoutDashboard, key: 'dashboard' },
   { to: '/reception/branches', icon: Building2, key: 'branches' },
   { to: '/reception/teachers', icon: BookMarked, key: 'teachers' },
   { to: '/reception/groups', icon: Users, key: 'groups' },
   { to: '/reception/students', icon: GraduationCap, key: 'students' },
   { to: '/reception/payments', icon: Wallet, key: 'payments' },
+  { to: '/reception/settings', icon: Settings, key: 'settings' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {

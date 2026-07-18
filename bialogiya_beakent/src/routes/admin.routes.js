@@ -8,17 +8,22 @@ const {
 } = require('../controllers/admin.controller');
 
 const adminOnly = [verifyToken, requireRole('admin')];
+// Reception now has almost all of admin's operational capabilities (manage
+// teachers/students/groups, view stats, edit settings) - the one boundary
+// that stays admin-exclusive is creating/deactivating OTHER reception
+// accounts (see below), so a front-desk account can't grant itself peers.
+const adminOrReception = [verifyToken, requireRole('admin', 'reception')];
 
-router.get('/stats', ...adminOnly, getStats);
-router.get('/teachers', ...adminOnly, getTeachers);
-router.post('/teachers', ...adminOnly, createTeacher);
-router.put('/teachers/:id', ...adminOnly, updateTeacher);
-router.delete('/teachers/:id', ...adminOnly, deleteTeacher);
-router.get('/students', ...adminOnly, getStudents);
-router.get('/groups', ...adminOnly, getGroups);
-router.put('/users/:id/toggle', ...adminOnly, toggleUserStatus);
-router.get('/settings', ...adminOnly, getSettings);
-router.put('/settings', ...adminOnly, updateSettings);
+router.get('/stats', ...adminOrReception, getStats);
+router.get('/teachers', ...adminOrReception, getTeachers);
+router.post('/teachers', ...adminOrReception, createTeacher);
+router.put('/teachers/:id', ...adminOrReception, updateTeacher);
+router.delete('/teachers/:id', ...adminOrReception, deleteTeacher);
+router.get('/students', ...adminOrReception, getStudents);
+router.get('/groups', ...adminOrReception, getGroups);
+router.put('/users/:id/toggle', ...adminOrReception, toggleUserStatus);
+router.get('/settings', ...adminOrReception, getSettings);
+router.put('/settings', ...adminOrReception, updateSettings);
 
 // Reception accounts - only admin can create/deactivate them.
 router.get('/reception', ...adminOnly, getReceptionUsers);

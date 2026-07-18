@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import MainLayout from './components/layout/MainLayout';
 
+// Shared
+import ProfilePage from './pages/shared/ProfilePage';
+
 // Auth
 import LoginPage from './pages/auth/LoginPage';
 
@@ -49,7 +52,6 @@ import AdminSettings from './pages/admin/AdminSettings';
 
 // Reception pages
 import ReceptionBranches from './pages/reception/ReceptionBranches';
-import ReceptionTeachers from './pages/reception/ReceptionTeachers';
 import ReceptionGroups from './pages/reception/ReceptionGroups';
 import ReceptionStudents from './pages/reception/ReceptionStudents';
 import ReceptionPayments from './pages/reception/ReceptionPayments';
@@ -121,6 +123,11 @@ export default function App() {
           <Route path="voice" element={<TeacherVoice />} />
         </Route>
 
+        {/* Shared - any authenticated role */}
+        <Route path="/profile" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+          <Route index element={<ProfilePage />} />
+        </Route>
+
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute role="admin"><MainLayout /></ProtectedRoute>}>
           <Route path="dashboard" element={<AdminDashboard />} />
@@ -132,13 +139,18 @@ export default function App() {
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 
-        {/* Reception Routes */}
+        {/* Reception Routes - has almost all of admin's operational
+            capabilities now (reuses the same Admin* components, which the
+            backend allows for the 'reception' role too), plus its own
+            branches/groups/students/payments pages. */}
         <Route path="/reception" element={<ProtectedRoute role="reception"><MainLayout /></ProtectedRoute>}>
+          <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="branches" element={<ReceptionBranches />} />
-          <Route path="teachers" element={<ReceptionTeachers />} />
+          <Route path="teachers" element={<AdminTeachers />} />
           <Route path="groups" element={<ReceptionGroups />} />
           <Route path="students" element={<ReceptionStudents />} />
           <Route path="payments" element={<ReceptionPayments />} />
+          <Route path="settings" element={<AdminSettings />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -6,7 +6,7 @@ const {
   updateUser, updateProfile, deleteUser, resetStudentPassword, freezeStudent, changePassword
 } = require('../controllers/user.controller');
 
-router.get('/', verifyToken, requireRole('admin'), getAllUsers);
+router.get('/', verifyToken, requireRole('admin', 'reception'), getAllUsers);
 router.get('/my-students', verifyToken, requireRole('teacher'), getStudentsByTeacher);
 // Creating/editing/deleting student accounts is reception's (and admin's)
 // job now - teachers can view their students and freeze them, but not
