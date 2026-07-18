@@ -13,7 +13,7 @@ export default function AdminGroups() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {groups?.map((g, i) => (
-          <motion.div key={g._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+          <motion.div key={g.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="card hover:shadow-soft transition-all">
             <div className="flex items-start gap-3 mb-3">
               <div className="w-11 h-11 gradient-bg rounded-2xl flex items-center justify-center text-2xl">{g.icon || '📚'}</div>

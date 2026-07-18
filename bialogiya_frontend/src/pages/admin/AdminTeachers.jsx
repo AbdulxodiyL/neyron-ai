@@ -8,15 +8,21 @@ import toast from 'react-hot-toast';
 export default function AdminTeachers() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', phone: '', email: '', language: 'uz' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', language: 'uz', branchId: '' });
   const [newCreds, setNewCreds] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [branchFilter, setBranchFilter] = useState('');
+
+  const { data: branches } = useQuery({
+    queryKey: ['branches-for-filter'],
+    queryFn: () => api.get('/reception/branches').then(r => r.data.data),
+  });
 
   const { data: teachers } = useQuery({
-    queryKey: ['all-teachers'],
-    queryFn: () => api.get('/admin/teachers').then(r => r.data.data),
+    queryKey: ['all-teachers', branchFilter],
+    queryFn: () => api.get('/admin/teachers', { params: branchFilter ? { branchId: branchFilter } : {} }).then(r => r.data.data),
   });
 
   const createMutation = useMutation({
@@ -24,7 +30,7 @@ export default function AdminTeachers() {
     onSuccess: ({ data }) => {
       qc.invalidateQueries(['all-teachers']);
       setNewCreds(data.data.credentials);
-      setForm({ name: '', phone: '', email: '', language: 'uz' });
+      setForm({ name: '', phone: '', email: '', language: 'uz', branchId: '' });
     },
     onError: (e) => toast.error(e.response?.data?.message || 'Xato'),
   });
@@ -58,32 +64,40 @@ export default function AdminTeachers() {
   const copy = (text) => { navigator.clipboard.writeText(text); toast.success('Nusxalandi!'); };
 
   const openEdit = (t) => {
-    setEditingId(t._id);
-    setEditForm({ name: t.name, phone: t.phone || '', email: t.email || '' });
+    setEditingId(t.id);
+    setEditForm({ name: t.name, phone: t.phone || '', email: t.email || '', branchId: t.branch?.id || '' });
     setSelectedTeacher(null);
   };
 
   const handleDelete = (t) => {
     if (window.confirm(`"${t.name}" ni o'chirishni tasdiqlaysizmi?`)) {
-      deleteMutation.mutate(t._id);
+      deleteMutation.mutate(t.id);
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">O'qituvchilar</h1>
-        <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={15} /> O'qituvchi qo'shish
-        </button>
+        <div className="flex items-center gap-2">
+          {branches?.length > 0 && (
+            <select value={branchFilter} onChange={e => setBranchFilter(e.target.value)} className="input-field text-sm py-2">
+              <option value="">Barcha filiallar</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          )}
+          <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2">
+            <Plus size={15} /> O'qituvchi qo'shish
+          </button>
+        </div>
       </div>
 
       {/* Teacher list */}
       <div className="space-y-2">
         {teachers?.map((t, i) => {
-          const isEditing = editingId === t._id;
+          const isEditing = editingId === t.id;
           return (
-            <motion.div key={t._id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+            <motion.div key={t.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
               className="card">
               {isEditing ? (
                 <div className="space-y-3">
@@ -108,10 +122,19 @@ export default function AdminTeachers() {
                     <input value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
                       className="input-field text-sm" placeholder="email@example.com" type="email" />
                   </div>
+                  {branches?.length > 0 && (
+                    <div>
+                      <label className="block text-xs font-medium mb-1 text-gray-500">Filial</label>
+                      <select value={editForm.branchId} onChange={e => setEditForm(f => ({ ...f, branchId: e.target.value }))} className="input-field text-sm">
+                        <option value="">Filialsiz</option>
+                        {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      </select>
+                    </div>
+                  )}
                   <div className="flex gap-2 pt-1">
                     <button onClick={() => setEditingId(null)} className="btn-ghost flex-1 text-sm">Bekor</button>
                     <button
-                      onClick={() => editForm.name && updateMutation.mutate({ id: t._id, data: editForm })}
+                      onClick={() => editForm.name && updateMutation.mutate({ id: t.id, data: editForm })}
                       disabled={!editForm.name || updateMutation.isPending}
                       className="btn-primary flex-1 text-sm flex items-center justify-center gap-1.5 disabled:opacity-40">
                       <Save size={13} />
@@ -134,6 +157,7 @@ export default function AdminTeachers() {
                         <span>@{t.username}</span>
                         {t.phone && <span className="flex items-center gap-0.5"><Phone size={10} /> {t.phone}</span>}
                         {t.email && <span>{t.email}</span>}
+                        {t.branch && <span className="badge bg-primary/10 text-primary text-[10px]">{t.branch.name}</span>}
                       </div>
                     </div>
                     <div className="text-xs text-gray-400 flex items-center gap-3 flex-shrink-0">
@@ -147,7 +171,7 @@ export default function AdminTeachers() {
                   </div>
                   {/* Always-visible action buttons */}
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={() => { toggleMutation.mutate(t._id); }}
+                    <button onClick={() => { toggleMutation.mutate(t.id); }}
                       className={`badge text-xs cursor-pointer ${t.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {t.isActive ? 'Faol' : 'Nofaol'}
                     </button>
@@ -233,6 +257,18 @@ export default function AdminTeachers() {
                   </div>
                 )}
 
+                {selectedTeacher.branch && (
+                  <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-2xl p-3">
+                    <div className="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Users size={16} className="text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-xs text-gray-400">Filial</div>
+                      <div className="font-semibold text-sm text-gray-800 dark:text-white">{selectedTeacher.branch.name}</div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
                     <Users size={16} className="text-primary mx-auto mb-1" />
@@ -252,7 +288,7 @@ export default function AdminTeachers() {
                 </div>
               </div>
 
-              <button onClick={() => { toggleMutation.mutate(selectedTeacher._id); setSelectedTeacher(null); }}
+              <button onClick={() => { toggleMutation.mutate(selectedTeacher.id); setSelectedTeacher(null); }}
                 className="btn-ghost w-full flex items-center justify-center gap-2 text-sm border border-gray-200 dark:border-gray-700">
                 {selectedTeacher.isActive ? 'Hisobni o\'chirish' : 'Hisobni yoqish'}
               </button>
@@ -321,6 +357,15 @@ export default function AdminTeachers() {
                       <option value="en">English</option>
                     </select>
                   </div>
+                  {branches?.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1.5">Filial</label>
+                      <select value={form.branchId} onChange={e => setForm(f => ({ ...f, branchId: e.target.value }))} className="input-field">
+                        <option value="">Filialsiz</option>
+                        {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      </select>
+                    </div>
+                  )}
                   <div className="flex gap-3 pt-2">
                     <button onClick={() => setShowCreate(false)} className="btn-ghost flex-1">Bekor</button>
                     <button

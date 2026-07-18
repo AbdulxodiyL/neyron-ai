@@ -51,6 +51,10 @@ model User {
   clonedVoiceName String?
 
   branches Branch[] @relation("ReceptionBranches")
+
+  branchId String?
+  branch   Branch? @relation("TeacherBranch", fields: [branchId], references: [id])
+
   teacherId String?
   teacher   User?   @relation("StudentTeacher", fields: [teacherId], references: [id])
   students  User[]  @relation("StudentTeacher")
@@ -107,7 +111,8 @@ model Branch {
   receptionId String
   reception   User   @relation("ReceptionBranches", fields: [receptionId], references: [id])
 
-  groups Group[]
+  groups   Group[]
+  teachers User[]  @relation("TeacherBranch")
 }
 
 model Lesson {

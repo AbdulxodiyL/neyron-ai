@@ -167,6 +167,22 @@ const runMigrations = async () => {
       END $$
     `);
 
+    // Teacher's assigned branch (so reception can filter teachers/students
+    // by branch, and pick a branch when creating a teacher).
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "branchId" TEXT
+    `);
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'User_branchId_fkey'
+        ) THEN
+          ALTER TABLE "User" ADD CONSTRAINT "User_branchId_fkey"
+            FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+        END IF;
+      END $$
+    `);
+
     console.log('✅ Schema migrations applied');
   } catch (err) {
     console.warn('⚠️  Migration warning (non-fatal):', err.message);

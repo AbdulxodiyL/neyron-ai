@@ -35,7 +35,7 @@ export default function AdminStudents() {
         {filtered.map((s, i) => {
           const { level } = getLevelProgress(s.xp);
           return (
-            <motion.div key={s._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
+            <motion.div key={s.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
               className="card flex items-center gap-3">
               <div className="w-9 h-9 gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">{s.name?.charAt(0)}</div>
               <div className="flex-1 min-w-0">
@@ -46,7 +46,7 @@ export default function AdminStudents() {
                 <span className="badge bg-primary/10 text-primary">Lv.{level}</span>
                 <span>{s.xp} XP</span>
               </div>
-              <button onClick={() => toggleMutation.mutate(s._id)}
+              <button onClick={() => toggleMutation.mutate(s.id)}
                 className={`badge text-xs cursor-pointer flex-shrink-0 ${s.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                 {s.isActive ? 'Active' : 'Inactive'}
               </button>

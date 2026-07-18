@@ -10,11 +10,19 @@ export default function ReceptionStudents() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', groupId: '', phone: '', language: 'uz' });
   const [newCreds, setNewCreds] = useState(null);
+  const [branchFilter, setBranchFilter] = useState('');
+
+  const { data: branches } = useQuery({
+    queryKey: ['reception-branches-for-filter'],
+    queryFn: () => api.get('/reception/branches').then(r => r.data.data),
+  });
 
   const { data: groups } = useQuery({
     queryKey: ['reception-groups'],
     queryFn: () => api.get('/reception/groups').then(r => r.data.data),
   });
+
+  const visibleGroups = branchFilter ? groups?.filter(g => g.branch?.id === branchFilter) : groups;
 
   // No single "all students" endpoint for reception - list per selected group instead.
   const [filterGroupId, setFilterGroupId] = useState('');
@@ -55,14 +63,21 @@ export default function ReceptionStudents() {
           <p className="text-sm text-gray-500 mt-0.5">Guruh tanlang, so'ng o'quvchi qo'shing</p>
         </div>
         <button onClick={() => { setForm(f => ({ ...f, groupId: filterGroupId })); setShowCreate(true); }}
-          disabled={!groups?.length} className="btn-primary flex items-center gap-2 disabled:opacity-40">
+          disabled={!visibleGroups?.length} className="btn-primary flex items-center gap-2 disabled:opacity-40">
           <Plus size={15} /> O'quvchi qo'shish
         </button>
       </div>
 
+      {branches?.length > 1 && (
+        <select value={branchFilter} onChange={e => { setBranchFilter(e.target.value); setFilterGroupId(''); }} className="input-field w-full mb-3">
+          <option value="">Barcha filiallar</option>
+          {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+      )}
+
       <select value={filterGroupId} onChange={e => setFilterGroupId(e.target.value)} className="input-field w-full mb-5">
         <option value="">Guruhni tanlang</option>
-        {groups?.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+        {visibleGroups?.map(g => <option key={g.id} value={g.id}>{g.name}{g.branch ? ` — ${g.branch.name}` : ''}</option>)}
       </select>
 
       <div className="space-y-2">
@@ -138,7 +153,7 @@ export default function ReceptionStudents() {
                     <label className="block text-sm font-medium mb-1.5">Guruh *</label>
                     <select value={form.groupId} onChange={e => setForm(f => ({ ...f, groupId: e.target.value }))} className="input-field">
                       <option value="">Tanlang</option>
-                      {groups?.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                      {visibleGroups?.map(g => <option key={g.id} value={g.id}>{g.name}{g.branch ? ` — ${g.branch.name}` : ''}</option>)}
                     </select>
                   </div>
                   <div>

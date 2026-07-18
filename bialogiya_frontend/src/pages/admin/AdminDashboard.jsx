@@ -67,7 +67,7 @@ export default function AdminDashboard() {
           <h3 className="font-bold text-gray-800 dark:text-white mb-3">Recently Joined</h3>
           <div className="space-y-2">
             {data.recentUsers.map((u, i) => (
-              <div key={u._id} className="flex items-center gap-3 py-1">
+              <div key={u.id} className="flex items-center gap-3 py-1">
                 <div className="w-8 h-8 gradient-bg rounded-full flex items-center justify-center text-white text-xs font-semibold">{u.name?.charAt(0)}</div>
                 <div className="flex-1 text-sm">
                   <span className="font-medium">{u.name}</span>

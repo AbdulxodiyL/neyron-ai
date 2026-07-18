@@ -24,11 +24,13 @@ const getStats = async (req, res, next) => {
 
 const getTeachers = async (req, res, next) => {
   try {
+    const { branchId } = req.query;
     const teachers = await prisma.user.findMany({
-      where: { role: 'teacher' },
+      where: { role: 'teacher', ...(branchId && { branchId }) },
       select: {
         id: true, name: true, username: true, email: true, phone: true,
         isActive: true, createdAt: true, lastLogin: true,
+        branch: { select: { id: true, name: true } },
         _count: { select: { taughtGroups: true, students: true, lessons: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -37,18 +39,31 @@ const getTeachers = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// Reception can only assign a teacher to one of their own branches; admin
+// can use any branch. Same rule as group.controller.js's createGroup.
+const assertBranchAccess = async (branchId, user) => {
+  if (!branchId) return null;
+  const branch = await prisma.branch.findUnique({ where: { id: branchId } });
+  if (!branch) return 'Branch not found';
+  if (user.role === 'reception' && branch.receptionId !== user.userId) return 'Forbidden: not your branch';
+  return null;
+};
+
 const createTeacher = async (req, res, next) => {
   try {
-    const { name, email, phone, language } = req.body;
+    const { name, email, phone, language, branchId } = req.body;
     if (!name) return error(res, 'Name required', 400);
+
+    const branchErr = await assertBranchAccess(branchId, req.user);
+    if (branchErr) return error(res, branchErr, branchErr.startsWith('Forbidden') ? 403 : 404);
 
     const username = generateUsername(name);
     const password = generatePassword(8);
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { name, email, phone: phone || null, username, passwordHash, role: 'teacher', language: language || 'uz' },
-      select: { id: true, name: true, username: true, email: true, phone: true, role: true, createdAt: true },
+      data: { name, email, phone: phone || null, username, passwordHash, role: 'teacher', language: language || 'uz', branchId: branchId || null },
+      select: { id: true, name: true, username: true, email: true, phone: true, role: true, createdAt: true, branch: { select: { id: true, name: true } } },
     });
 
     return success(res, { user, credentials: { username, password } }, 'Teacher created', 201);
@@ -57,13 +72,22 @@ const createTeacher = async (req, res, next) => {
 
 const updateTeacher = async (req, res, next) => {
   try {
-    const { name, phone, email } = req.body;
+    const { name, phone, email, branchId } = req.body;
     const teacher = await prisma.user.findUnique({ where: { id: req.params.id } });
     if (!teacher || teacher.role !== 'teacher') return error(res, 'Teacher not found', 404);
+
+    if (branchId !== undefined && branchId !== null) {
+      const branchErr = await assertBranchAccess(branchId, req.user);
+      if (branchErr) return error(res, branchErr, branchErr.startsWith('Forbidden') ? 403 : 404);
+    }
+
     const updated = await prisma.user.update({
       where: { id: req.params.id },
-      data: { ...(name && { name }), phone: phone ?? teacher.phone, ...(email !== undefined && { email }) },
-      select: { id: true, name: true, username: true, email: true, phone: true, isActive: true },
+      data: {
+        ...(name && { name }), phone: phone ?? teacher.phone, ...(email !== undefined && { email }),
+        ...(branchId !== undefined && { branchId: branchId || null }),
+      },
+      select: { id: true, name: true, username: true, email: true, phone: true, isActive: true, branch: { select: { id: true, name: true } } },
     });
     return success(res, updated, 'Teacher updated');
   } catch (err) { next(err); }
@@ -120,10 +144,11 @@ const deleteReceptionUser = async (req, res, next) => {
 
 const getStudents = async (req, res, next) => {
   try {
+    const { branchId } = req.query;
     const students = await prisma.user.findMany({
-      where: { role: 'student', isActive: true },
+      where: { role: 'student', isActive: true, ...(branchId && { group: { branchId } }) },
       select: { id: true, name: true, username: true, xp: true, level: true, isActive: true, createdAt: true,
-        group: { select: { id: true, name: true } }, teacher: { select: { id: true, name: true } } },
+        group: { select: { id: true, name: true, branch: { select: { id: true, name: true } } } }, teacher: { select: { id: true, name: true } } },
       orderBy: { name: 'asc' },
     });
     return success(res, students);
