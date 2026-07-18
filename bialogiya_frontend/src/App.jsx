@@ -53,6 +53,7 @@ import AdminSettings from './pages/admin/AdminSettings';
 // Reception pages
 import ReceptionBranches from './pages/reception/ReceptionBranches';
 import ReceptionGroups from './pages/reception/ReceptionGroups';
+import ReceptionGroupDetail from './pages/reception/ReceptionGroupDetail';
 import ReceptionStudents from './pages/reception/ReceptionStudents';
 import ReceptionPayments from './pages/reception/ReceptionPayments';
 
@@ -148,6 +149,7 @@ export default function App() {
           <Route path="branches" element={<ReceptionBranches />} />
           <Route path="teachers" element={<AdminTeachers />} />
           <Route path="groups" element={<ReceptionGroups />} />
+          <Route path="groups/:id" element={<ReceptionGroupDetail />} />
           <Route path="students" element={<ReceptionStudents />} />
           <Route path="payments" element={<ReceptionPayments />} />
           <Route path="settings" element={<AdminSettings />} />

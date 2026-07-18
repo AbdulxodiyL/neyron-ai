@@ -13,19 +13,31 @@ const createStudent = async (req, res, next) => {
   try {
     const { name, groupId, language, phone } = req.body;
     if (!name || !groupId) return error(res, 'Name and group required', 400);
+    if (!phone) return error(res, 'Telefon raqami majburiy (login va parol uchun)', 400);
 
     const group = await prisma.group.findUnique({ where: { id: groupId } });
     if (!group) return error(res, 'Group not found', 404);
 
-    const username = generateUsername(name);
-    const password = generatePassword(8);
+    // Username: ism.familiya_last4digits — e.g. ali.karimov_1234
+    // Password: last 4 digits of phone — easy for student to remember
+    const last4 = phone.replace(/\D/g, '').slice(-4);
+    if (last4.length < 4) return error(res, 'Telefon raqami noto\'g\'ri (kamida 4 ta raqam kerak)', 400);
+
+    const baseName = name.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
+    const username = `${baseName}_${last4}`;
+    const password = last4;
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // If username already taken, append random 2 digits
+    let finalUsername = username;
+    const existing = await prisma.user.findUnique({ where: { username } });
+    if (existing) finalUsername = `${username}${Math.floor(10 + Math.random() * 90)}`;
+
     const user = await prisma.user.create({
-      data: { name, username, passwordHash, role: 'student', language: language || 'uz', groupId, teacherId: group.teacherId, phone: phone || null },
+      data: { name, username: finalUsername, passwordHash, role: 'student', language: language || 'uz', groupId, teacherId: group.teacherId, phone: phone || null },
     });
 
-    return success(res, { user: safeUser(user), credentials: { username, password } }, 'Student created', 201);
+    return success(res, { user: safeUser(user), credentials: { username: finalUsername, password } }, 'Student created', 201);
   } catch (err) { next(err); }
 };
 
@@ -98,10 +110,16 @@ const deleteUser = async (req, res, next) => {
 
 const resetStudentPassword = async (req, res, next) => {
   try {
-    const newPassword = req.body.newPassword || generatePassword(8);
+    const student = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true, phone: true, username: true, name: true } });
+    if (!student) return error(res, 'Student not found', 404);
+
+    // Default: reset to last 4 digits of phone (the student's memorable password)
+    const last4 = (student.phone || '').replace(/\D/g, '').slice(-4);
+    const newPassword = (last4.length === 4 ? last4 : null) || req.body.newPassword || generatePassword(8);
+
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await prisma.user.update({ where: { id: req.params.id }, data: { passwordHash } });
-    return success(res, { newPassword }, 'Password reset');
+    return success(res, { password: newPassword, username: student.username, name: student.name });
   } catch (err) { next(err); }
 };
 

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Users2 } from 'lucide-react';
+import { Plus, X, Users2, ChevronRight } from 'lucide-react';
 import api from '../../config/axios';
 import { friendlyAiErrorMessage } from '../../utils/aiErrors';
 
 export default function ReceptionGroups() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', subject: 'biology', teacherId: '', branchId: '', monthlyFee: '' });
 
@@ -47,7 +49,8 @@ export default function ReceptionGroups() {
       <div className="space-y-2">
         {groups?.map((g, i) => (
           <motion.div key={g.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-            className="card flex items-center gap-3">
+            onClick={() => navigate(`/reception/groups/${g.id}`)}
+            className="card flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow">
             <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center text-white flex-shrink-0">
               <Users2 size={18} />
             </div>
@@ -61,6 +64,7 @@ export default function ReceptionGroups() {
             {g.monthlyFee > 0 && (
               <span className="badge text-xs bg-primary/10 text-primary">{new Intl.NumberFormat('uz-UZ').format(g.monthlyFee)} so'm/oy</span>
             )}
+            <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
           </motion.div>
         ))}
         {groups?.length === 0 && (

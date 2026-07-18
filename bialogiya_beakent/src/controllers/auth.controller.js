@@ -8,8 +8,15 @@ const login = async (req, res, next) => {
     const { username, password } = req.body;
     if (!username || !password) return error(res, 'Username and password required', 400);
 
-    const user = await prisma.user.findUnique({
-      where: { username },
+    // Accept: username, phone number, or full name (case-insensitive)
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: username },
+          { phone: username },
+          { name: { equals: username, mode: 'insensitive' } },
+        ],
+      },
       include: { group: { select: { id: true, name: true } } },
     });
 

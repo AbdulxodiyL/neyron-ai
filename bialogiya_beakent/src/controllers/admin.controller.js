@@ -24,9 +24,9 @@ const getStats = async (req, res, next) => {
 
 const getTeachers = async (req, res, next) => {
   try {
-    const { branchId } = req.query;
+    const { branchId, showInactive } = req.query;
     const teachers = await prisma.user.findMany({
-      where: { role: 'teacher', ...(branchId && { branchId }) },
+      where: { role: 'teacher', ...(!showInactive && { isActive: true }), ...(branchId && { branchId }) },
       select: {
         id: true, name: true, username: true, email: true, phone: true,
         isActive: true, createdAt: true, lastLogin: true,

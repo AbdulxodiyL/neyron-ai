@@ -7,7 +7,7 @@
   "password": "Пароль",
   "welcome_back": "Добро пожаловать!",
   "login_subtitle": "Войдите в Abdora AI",
-  "enter_username": "Введите имя пользователя",
+  "enter_username": "Логин, телефон или имя",
   "enter_password": "Введите пароль",
   "signing_in": "Вход...",
   "invalid_credentials": "Неверное имя пользователя или пароль",
