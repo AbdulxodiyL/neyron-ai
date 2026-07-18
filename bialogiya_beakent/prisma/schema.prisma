@@ -49,6 +49,8 @@ model User {
 
   clonedVoiceId   String?
   clonedVoiceName String?
+
+  branches Branch[] @relation("ReceptionBranches")
   teacherId String?
   teacher   User?   @relation("StudentTeacher", fields: [teacherId], references: [id])
   students  User[]  @relation("StudentTeacher")
@@ -74,11 +76,15 @@ model Group {
   icon        String?
   color       String?
   isActive    Boolean  @default(true)
+  monthlyFee  Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   teacherId String
   teacher   User   @relation("TeacherGroup", fields: [teacherId], references: [id])
+
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id])
 
   students    User[]       @relation("StudentGroup")
   lessons     Lesson[]
@@ -86,6 +92,22 @@ model Group {
   tests       Test[]
   attendances Attendance[]
   resources   Resource[]
+}
+
+// A physical location/campus. Only reception accounts can create branches,
+// and each reception account may own at most 3 (enforced in the controller,
+// not the schema).
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  receptionId String
+  reception   User   @relation("ReceptionBranches", fields: [receptionId], references: [id])
+
+  groups Group[]
 }
 
 model Lesson {

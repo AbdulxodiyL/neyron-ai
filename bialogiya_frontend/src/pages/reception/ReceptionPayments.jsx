@@ -10,6 +10,8 @@ const monthLabel = (m) => {
   return `${names[parseInt(mo, 10) - 1]} ${y}`;
 };
 
+const formatMoney = (n) => new Intl.NumberFormat('uz-UZ').format(n || 0) + " so'm";
+
 export default function ReceptionPayments() {
   const qc = useQueryClient();
   const [groupId, setGroupId] = useState('');
@@ -24,11 +26,13 @@ export default function ReceptionPayments() {
     if (!groupId && groups?.length) setGroupId(groups[0].id);
   }, [groups, groupId]);
 
-  const { data: students, isLoading } = useQuery({
+  const { data: paymentsData, isLoading } = useQuery({
     queryKey: ['reception-payments', groupId, month],
     queryFn: () => api.get(`/payments/group/${groupId}?month=${month}`).then(r => r.data.data),
     enabled: !!groupId,
   });
+  const students = paymentsData?.students;
+  const monthlyFee = paymentsData?.monthlyFee || 0;
 
   const paymentMutation = useMutation({
     mutationFn: ({ studentId, isPaid }) => api.post('/payments', { studentId, month, isPaid }),
@@ -37,6 +41,8 @@ export default function ReceptionPayments() {
 
   const paidCount = students?.filter(s => s.isPaid).length || 0;
   const unpaidCount = (students?.length || 0) - paidCount;
+  const collected = paidCount * monthlyFee;
+  const expected = (students?.length || 0) * monthlyFee;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -55,16 +61,35 @@ export default function ReceptionPayments() {
       </div>
 
       {students && (
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="card text-center py-3">
-            <div className="text-xl font-bold text-green-600">{paidCount}</div>
-            <div className="text-xs text-gray-400">To'lagan</div>
+        <>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="card text-center py-3">
+              <div className="text-xl font-bold text-green-600">{paidCount}</div>
+              <div className="text-xs text-gray-400">To'lagan</div>
+            </div>
+            <div className="card text-center py-3">
+              <div className="text-xl font-bold text-red-500">{unpaidCount}</div>
+              <div className="text-xs text-gray-400">To'lamagan</div>
+            </div>
           </div>
-          <div className="card text-center py-3">
-            <div className="text-xl font-bold text-red-500">{unpaidCount}</div>
-            <div className="text-xs text-gray-400">To'lamagan</div>
-          </div>
-        </div>
+          {monthlyFee > 0 && (
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="card text-center py-3">
+                <div className="text-base font-bold text-primary">{formatMoney(collected)}</div>
+                <div className="text-xs text-gray-400">Yig'ilgan (kirim)</div>
+              </div>
+              <div className="card text-center py-3">
+                <div className="text-base font-bold text-gray-400">{formatMoney(expected)}</div>
+                <div className="text-xs text-gray-400">Kutilgan jami</div>
+              </div>
+            </div>
+          )}
+          {monthlyFee === 0 && (
+            <p className="text-xs text-amber-500 mb-5 text-center">
+              Bu guruh uchun oylik to'lov summasi belgilanmagan — daromad hisoblanmaydi.
+            </p>
+          )}
+        </>
       )}
 
       <div className="text-xs text-gray-400 mb-2">{monthLabel(month)}</div>

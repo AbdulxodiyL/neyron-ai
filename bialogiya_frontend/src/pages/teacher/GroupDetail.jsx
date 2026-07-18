@@ -28,11 +28,6 @@ export default function GroupDetail() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [monthOffset, setMonthOffset] = useState(0);
-  const [showAddStudent, setShowAddStudent] = useState(false);
-  const [newStudentName, setNewStudentName] = useState('');
-  const [newStudentPhone, setNewStudentPhone] = useState('');
-  const [newStudentLang, setNewStudentLang] = useState('uz');
-  const [newCreds, setNewCreds] = useState(null);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
 
   const month = getMonthStr(monthOffset);
@@ -42,11 +37,12 @@ export default function GroupDetail() {
     queryFn: () => api.get(`/groups/${id}`).then(r => r.data.data),
   });
 
-  const { data: payments, isLoading: payLoading } = useQuery({
+  const { data: paymentsData, isLoading: payLoading } = useQuery({
     queryKey: ['group-payments', id, month],
     queryFn: () => api.get(`/payments/group/${id}?month=${month}`).then(r => r.data.data),
     enabled: !!id,
   });
+  const payments = paymentsData?.students;
 
   const freezeMutation = useMutation({
     mutationFn: (studentId) => api.patch(`/users/${studentId}/freeze`),
@@ -76,17 +72,6 @@ export default function GroupDetail() {
   const resetPwMutation = useMutation({
     mutationFn: (studentId) => api.post(`/users/${studentId}/reset-password`),
     onSuccess: ({ data }) => toast.success(`Yangi parol: ${data.data.newPassword}`, { duration: 8000 }),
-  });
-
-  const createStudentMutation = useMutation({
-    mutationFn: (d) => api.post('/users/create-student', d),
-    onSuccess: ({ data }) => {
-      qc.invalidateQueries(['group', id]);
-      setNewCreds(data.data.credentials);
-      setNewStudentName('');
-      setNewStudentPhone('');
-    },
-    onError: (e) => toast.error(e.response?.data?.message || 'Xato'),
   });
 
   const copy = (text) => { navigator.clipboard.writeText(text); toast.success("Nusxalandi!"); };
@@ -120,9 +105,6 @@ export default function GroupDetail() {
             </span>
           </div>
         </div>
-        <button onClick={() => setShowAddStudent(true)} className="btn-primary flex items-center gap-2 text-sm">
-          <Plus size={14} /> O'quvchi qo'shish
-        </button>
       </div>
 
       {/* Payment month selector */}
@@ -255,73 +237,6 @@ export default function GroupDetail() {
           )}
         </div>
       </div>
-
-      {/* Add student modal */}
-      <AnimatePresence>
-        {showAddStudent && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={e => e.target === e.currentTarget && setShowAddStudent(false)}>
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-lg">O'quvchi qo'shish</h2>
-                <button onClick={() => { setShowAddStudent(false); setNewCreds(null); }} className="btn-ghost p-1.5 rounded-lg"><X size={16} /></button>
-              </div>
-
-              {newCreds ? (
-                <div>
-                  <div className="text-center mb-4">
-                    <div className="text-4xl mb-2">🎉</div>
-                    <h3 className="font-bold text-green-600">O'quvchi qo'shildi!</h3>
-                    <p className="text-sm text-gray-500 mt-1">Bu ma'lumotlarni o'quvchiga bering</p>
-                  </div>
-                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div><div className="text-xs text-gray-500">Login</div><div className="font-mono font-bold">{newCreds.username}</div></div>
-                      <button onClick={() => copy(newCreds.username)} className="btn-ghost p-1.5 rounded-lg"><Copy size={14} /></button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div><div className="text-xs text-gray-500">Parol</div><div className="font-mono font-bold">{newCreds.password}</div></div>
-                      <button onClick={() => copy(newCreds.password)} className="btn-ghost p-1.5 rounded-lg"><Copy size={14} /></button>
-                    </div>
-                  </div>
-                  <button onClick={() => setNewCreds(null)} className="btn-primary w-full mt-4">Yana qo'shish</button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">To'liq ismi *</label>
-                    <input value={newStudentName} onChange={e => setNewStudentName(e.target.value)}
-                      placeholder="O'quvchi ismi" className="input-field" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">Telefon raqami</label>
-                    <input value={newStudentPhone} onChange={e => setNewStudentPhone(e.target.value)}
-                      placeholder="+998 90 123 45 67" type="tel" className="input-field" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5">Til</label>
-                    <select value={newStudentLang} onChange={e => setNewStudentLang(e.target.value)} className="input-field">
-                      <option value="uz">O'zbek</option>
-                      <option value="ru">Русский</option>
-                      <option value="en">English</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <button onClick={() => setShowAddStudent(false)} className="btn-ghost flex-1">Bekor</button>
-                    <button
-                      onClick={() => newStudentName && createStudentMutation.mutate({ name: newStudentName, groupId: id, language: newStudentLang, phone: newStudentPhone || undefined })}
-                      disabled={!newStudentName || createStudentMutation.isPending}
-                      className="btn-primary flex-1 disabled:opacity-40">
-                      {createStudentMutation.isPending ? 'Qo\'shilmoqda...' : 'Qo\'shish'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

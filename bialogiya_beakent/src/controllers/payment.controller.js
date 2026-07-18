@@ -7,6 +7,9 @@ const getGroupPayments = async (req, res, next) => {
     const { groupId } = req.params;
     const month = req.query.month || new Date().toISOString().slice(0, 7); // "2026-07"
 
+    const group = await prisma.group.findUnique({ where: { id: groupId }, select: { monthlyFee: true, name: true } });
+    if (!group) return error(res, 'Group not found', 404);
+
     const students = await prisma.user.findMany({
       where: { groupId, role: 'student', isActive: true },
       select: { id: true, name: true, username: true, isFrozen: true },
@@ -29,7 +32,7 @@ const getGroupPayments = async (req, res, next) => {
       isPaid: !!paymentMap[s.id]?.isPaid,
     }));
 
-    return success(res, result);
+    return success(res, { students: result, monthlyFee: group.monthlyFee || 0, groupName: group.name });
   } catch (err) { next(err); }
 };
 

@@ -127,6 +127,46 @@ const runMigrations = async () => {
       ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'reception'
     `).catch(() => {});
 
+    // Branch (filial) table - only reception accounts create these, max 3
+    // per account (enforced in the controller).
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Branch" (
+        "id"          TEXT NOT NULL,
+        "name"        TEXT NOT NULL,
+        "address"     TEXT,
+        "isActive"    BOOLEAN NOT NULL DEFAULT true,
+        "createdAt"   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "receptionId" TEXT NOT NULL,
+        CONSTRAINT "Branch_pkey" PRIMARY KEY ("id")
+      )
+    `);
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'Branch_receptionId_fkey'
+        ) THEN
+          ALTER TABLE "Branch" ADD CONSTRAINT "Branch_receptionId_fkey"
+            FOREIGN KEY ("receptionId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+        END IF;
+      END $$
+    `);
+
+    // Group gets a branch link + a monthly fee amount (for payment accounting)
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "Group" ADD COLUMN IF NOT EXISTS "branchId" TEXT,
+      ADD COLUMN IF NOT EXISTS "monthlyFee" INTEGER
+    `);
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'Group_branchId_fkey'
+        ) THEN
+          ALTER TABLE "Group" ADD CONSTRAINT "Group_branchId_fkey"
+            FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+        END IF;
+      END $$
+    `);
+
     console.log('✅ Schema migrations applied');
   } catch (err) {
     console.warn('⚠️  Migration warning (non-fatal):', err.message);

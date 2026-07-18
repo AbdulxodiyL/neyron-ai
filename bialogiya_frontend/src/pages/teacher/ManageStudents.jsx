@@ -86,9 +86,6 @@ export default function ManageStudents() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">O'quvchilar</h1>
-        <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={15} /> O'quvchi qo'shish
-        </button>
       </div>
 
       {/* Student list */}

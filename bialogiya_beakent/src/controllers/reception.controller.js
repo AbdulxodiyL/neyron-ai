@@ -37,13 +37,51 @@ const getTeachers = async (req, res, next) => {
 // So reception can pick a group to view/mark payments for.
 const getGroups = async (req, res, next) => {
   try {
+    const where = req.user.role === 'reception' ? { branch: { receptionId: req.user.userId } } : {};
     const groups = await prisma.group.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true, subject: true, teacher: { select: { name: true } }, _count: { select: { students: true } } },
+      where: { ...where, isActive: true },
+      select: {
+        id: true, name: true, subject: true, monthlyFee: true,
+        teacher: { select: { name: true } }, branch: { select: { id: true, name: true } },
+        _count: { select: { students: true } },
+      },
       orderBy: { name: 'asc' },
     });
     return success(res, groups);
   } catch (err) { next(err); }
 };
 
-module.exports = { createTeacher, getTeachers, getGroups };
+const MAX_BRANCHES_PER_RECEPTION = 3;
+
+// GET /reception/branches - the requesting reception user's own branches
+// (admin sees all, for oversight).
+const getMyBranches = async (req, res, next) => {
+  try {
+    const where = req.user.role === 'reception' ? { receptionId: req.user.userId } : {};
+    const branches = await prisma.branch.findMany({
+      where: { ...where, isActive: true },
+      include: { reception: { select: { id: true, name: true } }, _count: { select: { groups: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return success(res, branches);
+  } catch (err) { next(err); }
+};
+
+// POST /reception/branches - reception-only (not admin): each reception
+// account may open at most 3 branches.
+const createBranch = async (req, res, next) => {
+  try {
+    const { name, address } = req.body;
+    if (!name) return error(res, 'Branch name required', 400);
+
+    const count = await prisma.branch.count({ where: { receptionId: req.user.userId, isActive: true } });
+    if (count >= MAX_BRANCHES_PER_RECEPTION) {
+      return error(res, `Bitta qabulxona hisobi ko'pi bilan ${MAX_BRANCHES_PER_RECEPTION} ta filial ochishi mumkin`, 400);
+    }
+
+    const branch = await prisma.branch.create({ data: { name, address, receptionId: req.user.userId } });
+    return success(res, branch, 'Branch created', 201);
+  } catch (err) { next(err); }
+};
+
+module.exports = { createTeacher, getTeachers, getGroups, getMyBranches, createBranch };

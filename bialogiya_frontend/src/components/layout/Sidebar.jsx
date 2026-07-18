@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, BookOpen, ClipboardList, FileText, BarChart2,
   Users, FolderOpen, Calendar, Trophy, Star, Settings,
-  GraduationCap, BookMarked, UserCheck, Upload, Mic, Wallet, UserCog,
+  GraduationCap, BookMarked, UserCheck, Upload, Mic, Wallet, UserCog, Building2,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { getLevelProgress } from '../../utils/format';
@@ -48,7 +48,10 @@ const adminLinks = [
 ];
 
 const receptionLinks = [
+  { to: '/reception/branches', icon: Building2, key: 'branches' },
   { to: '/reception/teachers', icon: BookMarked, key: 'teachers' },
+  { to: '/reception/groups', icon: Users, key: 'groups' },
+  { to: '/reception/students', icon: GraduationCap, key: 'students' },
   { to: '/reception/payments', icon: Wallet, key: 'payments' },
 ];
 

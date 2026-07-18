@@ -121,7 +121,7 @@ const deleteReceptionUser = async (req, res, next) => {
 const getStudents = async (req, res, next) => {
   try {
     const students = await prisma.user.findMany({
-      where: { role: 'student' },
+      where: { role: 'student', isActive: true },
       select: { id: true, name: true, username: true, xp: true, level: true, isActive: true, createdAt: true,
         group: { select: { id: true, name: true } }, teacher: { select: { id: true, name: true } } },
       orderBy: { name: 'asc' },

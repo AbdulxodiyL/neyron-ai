@@ -48,7 +48,10 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
 
 // Reception pages
+import ReceptionBranches from './pages/reception/ReceptionBranches';
 import ReceptionTeachers from './pages/reception/ReceptionTeachers';
+import ReceptionGroups from './pages/reception/ReceptionGroups';
+import ReceptionStudents from './pages/reception/ReceptionStudents';
 import ReceptionPayments from './pages/reception/ReceptionPayments';
 
 const ProtectedRoute = ({ children, role }) => {
@@ -131,7 +134,10 @@ export default function App() {
 
         {/* Reception Routes */}
         <Route path="/reception" element={<ProtectedRoute role="reception"><MainLayout /></ProtectedRoute>}>
+          <Route path="branches" element={<ReceptionBranches />} />
           <Route path="teachers" element={<ReceptionTeachers />} />
+          <Route path="groups" element={<ReceptionGroups />} />
+          <Route path="students" element={<ReceptionStudents />} />
           <Route path="payments" element={<ReceptionPayments />} />
         </Route>
 
