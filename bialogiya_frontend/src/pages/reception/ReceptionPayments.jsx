@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Wallet, CheckCircle2, XCircle, Users } from 'lucide-react';
+import { Wallet, CheckCircle2, XCircle, Users, Download, Loader2 } from 'lucide-react';
 import api from '../../config/axios';
+import toast from 'react-hot-toast';
+import { friendlyAiErrorMessage } from '../../utils/aiErrors';
 
 const monthLabel = (m) => {
   const [y, mo] = m.split('-');
@@ -44,11 +46,38 @@ export default function ReceptionPayments() {
   const collected = paidCount * monthlyFee;
   const expected = (students?.length || 0) * monthlyFee;
 
+  const [exporting, setExporting] = useState(false);
+  const exportExcel = async () => {
+    if (!groupId) return;
+    setExporting(true);
+    try {
+      const res = await api.get(`/payments/group/${groupId}/export`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${groups?.find(g => g.id === groupId)?.name || 'guruh'}-tolovlar.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(friendlyAiErrorMessage(err));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">To'lovlar</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Kirim-chiqim: kim to'lagan, kim to'lamagan</p>
+      <div className="mb-6 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">To'lovlar</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Kirim-chiqim: kim to'lagan, kim to'lamagan</p>
+        </div>
+        <button onClick={exportExcel} disabled={!groupId || exporting} className="btn-outline flex items-center gap-2 disabled:opacity-40">
+          {exporting ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+          Excel yuklab olish
+        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-5">

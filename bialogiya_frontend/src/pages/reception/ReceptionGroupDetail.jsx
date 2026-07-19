@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Plus, Trash2, X, Copy, KeyRound, User,
   Phone, Hash, RefreshCw, Loader2, CheckCircle2,
-  Calendar, Clock, DoorOpen, Building2
+  Calendar, Clock, DoorOpen, Building2, BookOpen, FileText, Eye, Download
 } from 'lucide-react';
 
 const DAYS = [
@@ -38,6 +38,52 @@ export default function ReceptionGroupDetail() {
     queryKey: ['reception-group-detail', id],
     queryFn: () => api.get(`/groups/${id}`).then(r => r.data.data),
   });
+
+  const { data: lessons } = useQuery({
+    queryKey: ['reception-group-lessons', id],
+    queryFn: () => api.get(`/lessons?groupId=${id}`).then(r => r.data.data),
+  });
+
+  const { data: resources } = useQuery({
+    queryKey: ['reception-group-resources', id],
+    queryFn: () => api.get(`/resources?groupId=${id}`).then(r => r.data.data),
+  });
+
+  const [previewingId, setPreviewingId] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  const previewResource = async (r) => {
+    setPreviewingId(r.id);
+    try {
+      const res = await api.get(`/resources/${r.id}/preview`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      toast.error("Faylni ochib bo'lmadi");
+    } finally {
+      setPreviewingId(null);
+    }
+  };
+
+  const downloadResourceFile = async (r) => {
+    setDownloadingId(r.id);
+    try {
+      const res = await api.post(`/resources/${r.id}/download`, {}, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = r.filePath || r.title;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error("Faylni yuklab bo'lmadi");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const addMutation = useMutation({
     mutationFn: (d) => api.post('/users/create-student', { ...d, groupId: id }),
@@ -129,6 +175,54 @@ export default function ReceptionGroupDetail() {
           <Plus size={15} /> O'quvchi qo'shish
         </button>
       </div>
+
+      {/* Lessons + Materials summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+        <div className="card flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+            <BookOpen size={17} className="text-primary" />
+          </div>
+          <div>
+            <div className="text-lg font-bold text-gray-800 dark:text-white">{lessons?.length ?? '—'}</div>
+            <div className="text-xs text-gray-400">Yuklangan darslar</div>
+          </div>
+        </div>
+        <div className="card flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+            <FileText size={17} className="text-amber-600" />
+          </div>
+          <div>
+            <div className="text-lg font-bold text-gray-800 dark:text-white">{resources?.length ?? '—'}</div>
+            <div className="text-xs text-gray-400">Yuklangan materiallar (PDF va h.k.)</div>
+          </div>
+        </div>
+      </div>
+
+      {/* PDF / materials list */}
+      {resources?.length > 0 && (
+        <div className="card mb-5">
+          <h2 className="font-bold text-sm mb-3 text-gray-800 dark:text-white">Materiallar</h2>
+          <div className="space-y-2">
+            {resources.map(r => (
+              <div key={r.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <div className="w-9 h-9 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText size={15} className="text-red-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{r.title}</div>
+                  <div className="text-xs text-gray-400">{r.teacher?.name} · {new Date(r.createdAt).toLocaleDateString('uz-UZ')}</div>
+                </div>
+                <button onClick={() => previewResource(r)} disabled={previewingId === r.id} className="btn-ghost p-2 rounded-lg" title="Ko'rish">
+                  {previewingId === r.id ? <Loader2 size={14} className="animate-spin" /> : <Eye size={14} />}
+                </button>
+                <button onClick={() => downloadResourceFile(r)} disabled={downloadingId === r.id} className="btn-ghost p-2 rounded-lg" title="Yuklab olish">
+                  {downloadingId === r.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Students table */}
       <div className="card overflow-hidden p-0">
