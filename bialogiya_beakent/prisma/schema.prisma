@@ -81,6 +81,10 @@ model Group {
   color       String?
   isActive    Boolean  @default(true)
   monthlyFee  Int?
+  weekDays    String?  // JSON array stored as string: ["mon","wed","fri"]
+  startTime   String?  // "HH:MM"  e.g. "09:00"
+  endTime     String?  // "HH:MM"  e.g. "10:30"
+  room        String?  // e.g. "101-xona", "2-kat"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

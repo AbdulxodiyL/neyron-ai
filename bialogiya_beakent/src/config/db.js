@@ -183,6 +183,15 @@ const runMigrations = async () => {
       END $$
     `);
 
+    // Schedule info on Group: which days, what time, which room
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "Group"
+        ADD COLUMN IF NOT EXISTS "weekDays"  TEXT,
+        ADD COLUMN IF NOT EXISTS "startTime" TEXT,
+        ADD COLUMN IF NOT EXISTS "endTime"   TEXT,
+        ADD COLUMN IF NOT EXISTS "room"      TEXT
+    `);
+
     console.log('✅ Schema migrations applied');
   } catch (err) {
     console.warn('⚠️  Migration warning (non-fatal):', err.message);

@@ -3,19 +3,16 @@ const { success, error } = require('../utils/apiResponse');
 
 const createGroup = async (req, res, next) => {
   try {
-    const { name, description, subject, icon, color, teacherId, branchId, monthlyFee } = req.body;
+    const { name, description, subject, icon, color, teacherId, branchId, monthlyFee,
+            weekDays, startTime, endTime, room } = req.body;
     if (!name) return error(res, 'Group name required', 400);
 
-    // Only teachers create groups "for themselves" - but teachers can no
-    // longer create groups at all (reception/admin does it on their behalf),
-    // so an explicit teacherId is required from reception/admin.
     const assignedTeacherId = req.user.role === 'teacher' ? req.user.userId : teacherId;
     if (!assignedTeacherId) return error(res, 'teacherId required', 400);
 
     if (branchId) {
       const branch = await prisma.branch.findUnique({ where: { id: branchId } });
       if (!branch) return error(res, 'Branch not found', 404);
-      // Reception can only assign groups to their own branches.
       if (req.user.role === 'reception' && branch.receptionId !== req.user.userId) {
         return error(res, 'Forbidden: not your branch', 403);
       }
@@ -27,6 +24,10 @@ const createGroup = async (req, res, next) => {
         teacherId: assignedTeacherId,
         branchId: branchId || null,
         monthlyFee: monthlyFee ? parseInt(monthlyFee, 10) : null,
+        weekDays: weekDays ? JSON.stringify(weekDays) : null,
+        startTime: startTime || null,
+        endTime: endTime || null,
+        room: room || null,
       },
       include: {
         teacher: { select: { id: true, name: true } },
@@ -68,6 +69,7 @@ const getGroupById = async (req, res, next) => {
       where: { id: req.params.id },
       include: {
         teacher: { select: { id: true, name: true } },
+        branch: { select: { id: true, name: true } },
         students: {
           where: { isActive: true },
           select: { id: true, name: true, username: true, xp: true, level: true, isFrozen: true, lastLogin: true, phone: true },
@@ -83,7 +85,8 @@ const getGroupById = async (req, res, next) => {
 
 const updateGroup = async (req, res, next) => {
   try {
-    const { name, description, subject, icon, color, isActive, teacherId, branchId, monthlyFee } = req.body;
+    const { name, description, subject, icon, color, isActive, teacherId, branchId,
+            monthlyFee, weekDays, startTime, endTime, room } = req.body;
     const group = await prisma.group.update({
       where: { id: req.params.id },
       data: {
@@ -91,6 +94,10 @@ const updateGroup = async (req, res, next) => {
         ...(teacherId ? { teacherId } : {}),
         ...(branchId !== undefined ? { branchId: branchId || null } : {}),
         ...(monthlyFee !== undefined ? { monthlyFee: monthlyFee ? parseInt(monthlyFee, 10) : null } : {}),
+        ...(weekDays !== undefined ? { weekDays: weekDays ? JSON.stringify(weekDays) : null } : {}),
+        ...(startTime !== undefined ? { startTime: startTime || null } : {}),
+        ...(endTime !== undefined ? { endTime: endTime || null } : {}),
+        ...(room !== undefined ? { room: room || null } : {}),
       },
     });
     return success(res, group);

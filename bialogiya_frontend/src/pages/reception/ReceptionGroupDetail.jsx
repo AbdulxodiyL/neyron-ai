@@ -4,8 +4,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Plus, Trash2, X, Copy, KeyRound, User,
-  Phone, Hash, RefreshCw, Loader2, CheckCircle2
+  Phone, Hash, RefreshCw, Loader2, CheckCircle2,
+  Calendar, Clock, DoorOpen, Building2
 } from 'lucide-react';
+
+const DAYS = [
+  { key: 'mon', label: 'Dushanba' }, { key: 'tue', label: 'Seshanba' }, { key: 'wed', label: 'Chorshanba' },
+  { key: 'thu', label: 'Payshanba' }, { key: 'fri', label: 'Juma' }, { key: 'sat', label: 'Shanba' }, { key: 'sun', label: 'Yakshanba' },
+];
+
+const parseWeekDays = (raw) => {
+  try { return JSON.parse(raw || '[]'); } catch { return []; }
+};
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -90,6 +100,30 @@ export default function ReceptionGroupDetail() {
             {group?.teacher?.name || 'O\'qituvchi biriktirilmagan'} · {students.length} o'quvchi
             {monthlyFee > 0 && ` · ${fmt(monthlyFee)} so'm/oy`}
           </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
+            {parseWeekDays(group?.weekDays).length > 0 && (
+              <span className="text-xs text-primary/80 flex items-center gap-1">
+                <Calendar size={11} />
+                {parseWeekDays(group.weekDays).map(d => DAYS.find(x => x.key === d)?.label).filter(Boolean).join(', ')}
+              </span>
+            )}
+            {group?.startTime && (
+              <span className="text-xs text-primary/80 flex items-center gap-1">
+                <Clock size={11} />
+                {group.startTime}{group.endTime ? `–${group.endTime}` : ''}
+              </span>
+            )}
+            {group?.room && (
+              <span className="text-xs text-gray-400 flex items-center gap-1">
+                <DoorOpen size={11} />{group.room}
+              </span>
+            )}
+            {group?.branch?.name && (
+              <span className="text-xs text-gray-400 flex items-center gap-1">
+                <Building2 size={11} />{group.branch.name}
+              </span>
+            )}
+          </div>
         </div>
         <button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2">
           <Plus size={15} /> O'quvchi qo'shish
