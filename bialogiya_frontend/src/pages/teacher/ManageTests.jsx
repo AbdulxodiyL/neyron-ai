@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -150,7 +151,7 @@ export default function ManageTests() {
             </div>
             <div className="flex items-center gap-1">
               <Link to={`/teacher/tests/${t._id}/results`} className="btn-ghost p-1.5 rounded-lg text-secondary"><BarChart2 size={15} /></Link>
-              <button onClick={() => { if (window.confirm('Delete test?')) deleteMutation.mutate(t._id); }}
+              <button onClick={() => { deleteMutation.mutate(t._id); }}
                 className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50"><Trash2 size={14} /></button>
             </div>
           </motion.div>

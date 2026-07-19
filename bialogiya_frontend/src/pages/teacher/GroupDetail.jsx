@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -198,7 +199,7 @@ export default function GroupDetail() {
                       <Snowflake size={14} />
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); if (window.confirm('Parolni yangilash?')) resetPwMutation.mutate(s._id); }}
+                      onClick={(e) => { e.stopPropagation(); resetPwMutation.mutate(s._id); }}
                       className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-primary/10 hover:text-primary transition-all"
                       title="Kodni restart qilish">
                       <RefreshCw size={14} />

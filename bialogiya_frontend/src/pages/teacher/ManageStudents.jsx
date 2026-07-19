@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Copy, RefreshCw, X, GraduationCap, Phone, Users, Star, Zap, Pencil, Trash2, Save, ChevronRight } from 'lucide-react';
@@ -77,7 +78,7 @@ export default function ManageStudents() {
 
   const handleDelete = (s, e) => {
     e.stopPropagation();
-    if (window.confirm(`"${s.name}" ni o'chirishni tasdiqlaysizmi?`)) {
+    {  // removed confirm
       deleteMutation.mutate(s._id);
     }
   };
@@ -195,7 +196,7 @@ export default function ManageStudents() {
                     className="btn-ghost p-1.5 rounded-lg text-primary" title="Tahrirlash">
                     <Pencil size={15} />
                   </button>
-                  <button onClick={() => { if (window.confirm(`"${selectedStudent.name}" ni o'chirishni tasdiqlaysizmi?`)) deleteMutation.mutate(selectedStudent._id); }}
+                  <button onClick={() => { deleteMutation.mutate(selectedStudent._id); }}
                     className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50" title="O'chirish">
                     <Trash2 size={15} />
                   </button>
@@ -280,7 +281,7 @@ export default function ManageStudents() {
               )}
 
               <button
-                onClick={() => { if (window.confirm('Parolni yangilash?')) resetPwMutation.mutate(selectedStudent._id); }}
+                onClick={() => { resetPwMutation.mutate(selectedStudent._id); }}
                 disabled={resetPwMutation.isPending}
                 className="btn-ghost w-full flex items-center justify-center gap-2 text-sm border border-gray-200 dark:border-gray-700">
                 <RefreshCw size={14} className={resetPwMutation.isPending ? 'animate-spin' : ''} />

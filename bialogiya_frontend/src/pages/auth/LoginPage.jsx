@@ -103,6 +103,9 @@ export default function LoginPage() {
                 className="input-field"
                 autoComplete="username"
               />
+              <p className="text-xs text-gray-400 mt-1.5">
+                Login, telefon raqami (+998...) yoki to'liq ism-familiya bilan kirish mumkin
+              </p>
             </div>
 
             <div>
@@ -124,6 +127,9 @@ export default function LoginPage() {
                   {showPass ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
+              <p className="text-xs text-gray-400 mt-1.5">
+                O'quvchilar uchun: parol = telefon raqamingizning oxirgi 4 ta raqami
+              </p>
             </div>
 
             <motion.button

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 const fmt = (n) => n ? new Intl.NumberFormat('uz-UZ').format(n) : '0';
 
@@ -19,6 +20,7 @@ export default function ReceptionGroupDetail() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [creds, setCreds] = useState(null);           // fetched creds for selected student
   const [showAdd, setShowAdd] = useState(false);
+  const [confirm, setConfirm] = useState(null);
   const [form, setForm] = useState({ name: '', phone: '', language: 'uz' });
   const [newCreds, setNewCreds] = useState(null);
 
@@ -76,6 +78,7 @@ export default function ReceptionGroupDetail() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      <ConfirmDialog confirm={confirm} onClose={() => setConfirm(null)} />
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/reception/groups')} className="btn-ghost p-2 rounded-xl">
@@ -204,8 +207,11 @@ export default function ReceptionGroupDetail() {
                 </button>
                 <button
                   onClick={() => {
-                    if (window.confirm(`"${selectedStudent.name}"ni o'chirishni tasdiqlaysizmi?`))
-                      deleteMutation.mutate(selectedStudent.id);
+                    setConfirm({
+                      title: `"${selectedStudent.name}"ni o'chirish`,
+                      message: "O'quvchi guruhdan va tizimdan to'liq o'chiriladi.",
+                      onConfirm: () => deleteMutation.mutate(selectedStudent.id),
+                    });
                   }}
                   disabled={deleteMutation.isPending}
                   className="btn-ghost flex-1 flex items-center justify-center gap-1.5 text-xs text-red-500 hover:bg-red-50"

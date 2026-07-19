@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Copy, X, GraduationCap, Trash2 } from 'lucide-react';
 import api from '../../config/axios';
 import { friendlyAiErrorMessage } from '../../utils/aiErrors';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function ReceptionStudents() {
   const qc = useQueryClient();
@@ -50,13 +51,19 @@ export default function ReceptionStudents() {
     },
   });
 
+  const [confirm, setConfirm] = useState(null);
   const copy = (text) => navigator.clipboard.writeText(text);
   const handleDelete = (s) => {
-    if (window.confirm(`"${s.name}"ni o'chirishni tasdiqlaysizmi?`)) deleteMutation.mutate(s.id);
+    setConfirm({
+      title: `"${s.name}"ni o'chirish`,
+      message: "O'quvchi tizimdan to'liq o'chiriladi.",
+      onConfirm: () => deleteMutation.mutate(s.id),
+    });
   };
 
   return (
     <div className="max-w-3xl mx-auto">
+      <ConfirmDialog confirm={confirm} onClose={() => setConfirm(null)} />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">O'quvchilar</h1>

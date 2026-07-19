@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Plus, BookOpen, Trash2, RefreshCw, Eye, Pencil } from 'lucide-react';
@@ -49,7 +50,7 @@ export default function ManageLessons() {
               {(l.aiContent?.status === 'error' || l.aiContent?.status === 'pending') && (
                 <button onClick={() => regenMutation.mutate(l._id)} className="btn-ghost p-1.5 rounded-lg text-secondary hover:text-secondary"><RefreshCw size={14} /></button>
               )}
-              <button onClick={() => { if (window.confirm('Delete this lesson?')) deleteMutation.mutate(l._id); }}
+              <button onClick={() => { deleteMutation.mutate(l._id); }}
                 className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50"><Trash2 size={14} /></button>
             </div>
           </motion.div>

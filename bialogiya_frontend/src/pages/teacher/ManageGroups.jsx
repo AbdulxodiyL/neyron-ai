@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -105,7 +106,7 @@ export default function ManageGroups() {
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={e => { e.stopPropagation(); if (window.confirm('Guruhni o\'chirish?')) deleteMutation.mutate(g._id); }}
+                <button onClick={e => { e.stopPropagation(); deleteMutation.mutate(g._id); }}
                   className="btn-ghost p-1.5 text-red-400 hover:bg-red-50 rounded-lg">
                   <Trash2 size={14} />
                 </button>

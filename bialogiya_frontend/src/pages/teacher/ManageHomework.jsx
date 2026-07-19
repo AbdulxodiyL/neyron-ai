@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -140,7 +141,7 @@ export default function ManageHomework() {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => { if (window.confirm('Vazifani o\'chirishni tasdiqlaysizmi?')) deleteMutation.mutate(hw._id); }}
+                      onClick={() => { deleteMutation.mutate(hw._id); }}
                       className="btn-ghost p-1.5 rounded-lg text-red-400 hover:bg-red-50" title="O'chirish">
                       <Trash2 size={14} />
                     </button>

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Copy, X, UserCog, Phone, Trash2 } from 'lucide-react';
 import api from '../../config/axios';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { friendlyAiErrorMessage } from '../../utils/aiErrors';
 
 export default function AdminReception() {
@@ -10,6 +11,7 @@ export default function AdminReception() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', email: '', language: 'uz' });
   const [newCreds, setNewCreds] = useState(null);
+  const [confirm, setConfirm] = useState(null);
 
   const { data: users } = useQuery({
     queryKey: ['admin-reception'],
@@ -33,11 +35,16 @@ export default function AdminReception() {
   const copy = (text) => navigator.clipboard.writeText(text);
 
   const handleDelete = (u) => {
-    if (window.confirm(`"${u.name}" hisobini o'chirishni tasdiqlaysizmi?`)) deleteMutation.mutate(u.id);
+    setConfirm({
+      title: `"${u.name}"ni o'chirish`,
+      message: "Qabulxona xodimi tizimga kira olmaydi.",
+      onConfirm: () => deleteMutation.mutate(u.id),
+    });
   };
 
   return (
     <div className="max-w-3xl mx-auto">
+      <ConfirmDialog confirm={confirm} onClose={() => setConfirm(null)} />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Qabulxona</h1>

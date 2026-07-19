@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Copy, X, UserCheck, Pencil, Trash2, Save, Users, GraduationCap, Phone, BookOpen } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function AdminTeachers() {
   const qc = useQueryClient();
@@ -14,6 +15,7 @@ export default function AdminTeachers() {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [branchFilter, setBranchFilter] = useState('');
+  const [confirm, setConfirm] = useState(null);
 
   const { data: branches } = useQuery({
     queryKey: ['branches-for-filter'],
@@ -70,13 +72,17 @@ export default function AdminTeachers() {
   };
 
   const handleDelete = (t) => {
-    if (window.confirm(`"${t.name}" ni o'chirishni tasdiqlaysizmi?`)) {
-      deleteMutation.mutate(t.id);
-    }
+    setConfirm({
+      title: `"${t.name}"ni o'chirish`,
+      message: "O'qituvchi hisobi to'liq yashiriladi va tizimga kira olmaydi.",
+      warning: "Guruhlarni oldin boshqa o'qituvchiga biriktiring.",
+      onConfirm: () => deleteMutation.mutate(t.id),
+    });
   };
 
   return (
     <div className="max-w-4xl mx-auto">
+      <ConfirmDialog confirm={confirm} onClose={() => setConfirm(null)} />
       <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">O'qituvchilar</h1>
         <div className="flex items-center gap-2">

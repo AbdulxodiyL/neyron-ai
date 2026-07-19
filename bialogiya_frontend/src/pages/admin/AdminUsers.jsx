@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Search, UserCheck, UserPlus, ShieldCheck, Lock, Trash2, Edit, Save, X } from 'lucide-react';
@@ -194,7 +195,7 @@ export default function AdminUsers() {
               </button>
               <button
                 onClick={() => {
-                  if (window.confirm(`Deactivate ${user.name || user.username}?`)) deleteMutation.mutate(user.id || user._id);
+                  deleteMutation.mutate(user.id || user._id);
                 }}
                 className="badge text-xs bg-red-100 text-red-700"
               >
