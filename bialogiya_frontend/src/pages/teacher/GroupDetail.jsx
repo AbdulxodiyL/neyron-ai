@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Users, Snowflake, CreditCard, RefreshCw, Copy,
-  Plus, X, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight, Trash2
+  Plus, X, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import api from '../../config/axios';
 import toast from 'react-hot-toast';
