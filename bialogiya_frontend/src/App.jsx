@@ -54,6 +54,7 @@ import AdminSettings from './pages/admin/AdminSettings';
 import ReceptionBranches from './pages/reception/ReceptionBranches';
 import ReceptionGroups from './pages/reception/ReceptionGroups';
 import ReceptionGroupDetail from './pages/reception/ReceptionGroupDetail';
+import ReceptionTeacherDetail from './pages/reception/ReceptionTeacherDetail';
 import ReceptionStudents from './pages/reception/ReceptionStudents';
 import ReceptionPayments from './pages/reception/ReceptionPayments';
 
@@ -134,6 +135,7 @@ export default function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="teachers" element={<AdminTeachers />} />
+          <Route path="teachers/:id" element={<ReceptionTeacherDetail />} />
           <Route path="reception" element={<AdminReception />} />
           <Route path="students" element={<AdminStudents />} />
           <Route path="groups" element={<AdminGroups />} />
@@ -150,6 +152,7 @@ export default function App() {
           <Route path="teachers" element={<AdminTeachers />} />
           <Route path="groups" element={<ReceptionGroups />} />
           <Route path="groups/:id" element={<ReceptionGroupDetail />} />
+          <Route path="teachers/:id" element={<ReceptionTeacherDetail />} />
           <Route path="students" element={<ReceptionStudents />} />
           <Route path="payments" element={<ReceptionPayments />} />
           <Route path="settings" element={<AdminSettings />} />

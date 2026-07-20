@@ -185,7 +185,37 @@ const updateSettings = async (req, res, next) => {
   catch (err) { next(err); }
 };
 
+// One-stop overview for a specific teacher: their groups, students (across
+// all their groups), and lessons (with which group each belongs to) - used
+// when reception clicks the Guruh/O'quvchi/Dars counters on a teacher card.
+const getTeacherOverview = async (req, res, next) => {
+  try {
+    const teacher = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true, name: true, role: true } });
+    if (!teacher || teacher.role !== 'teacher') return error(res, 'Teacher not found', 404);
+
+    const groups = await prisma.group.findMany({
+      where: { teacherId: teacher.id },
+      select: { id: true, name: true, subject: true, monthlyFee: true, _count: { select: { students: true } }, branch: { select: { id: true, name: true } } },
+      orderBy: { name: 'asc' },
+    });
+
+    const students = await prisma.user.findMany({
+      where: { role: 'student', isActive: true, teacherId: teacher.id },
+      select: { id: true, name: true, username: true, phone: true, xp: true, level: true, group: { select: { id: true, name: true } } },
+      orderBy: { name: 'asc' },
+    });
+
+    const lessons = await prisma.lesson.findMany({
+      where: { teacherId: teacher.id, isActive: true },
+      select: { id: true, title: true, subject: true, createdAt: true, group: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return success(res, { teacher, groups, students, lessons });
+  } catch (err) { next(err); }
+};
+
 module.exports = {
   getStats, getTeachers, createTeacher, updateTeacher, deleteTeacher, getStudents, getGroups, toggleUserStatus, getSettings, updateSettings,
-  getReceptionUsers, createReceptionUser, deleteReceptionUser,
+  getReceptionUsers, createReceptionUser, deleteReceptionUser, getTeacherOverview,
 };

@@ -198,6 +198,26 @@ export default function ReceptionGroupDetail() {
         </div>
       </div>
 
+      {/* Lessons list */}
+      {lessons?.length > 0 && (
+        <div className="card mb-5">
+          <h2 className="font-bold text-sm mb-3 text-gray-800 dark:text-white">Darslar (mavzular)</h2>
+          <div className="space-y-2">
+            {lessons.map(l => (
+              <div key={l.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <BookOpen size={15} className="text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{l.title}</div>
+                  <div className="text-xs text-gray-400">{new Date(l.createdAt).toLocaleDateString('uz-UZ')}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* PDF / materials list */}
       {resources?.length > 0 && (
         <div className="card mb-5">

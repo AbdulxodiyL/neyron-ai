@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Copy, X, UserCheck, Pencil, Trash2, Save, Users, GraduationCap, Phone, BookOpen } from 'lucide-react';
@@ -8,6 +9,8 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export default function AdminTeachers() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', email: '', language: 'uz', branchId: '' });
   const [newCreds, setNewCreds] = useState(null);
@@ -276,21 +279,24 @@ export default function AdminTeachers() {
                 )}
 
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
+                  <button onClick={() => { const p = location.pathname.startsWith('/admin') ? 'admin' : 'reception'; navigate(`/${p}/teachers/${selectedTeacher.id}?tab=groups`); }}
+                    className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     <Users size={16} className="text-primary mx-auto mb-1" />
                     <div className="font-bold text-primary text-lg">{selectedTeacher._count?.taughtGroups || 0}</div>
                     <div className="text-xs text-gray-400">Guruh</div>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
+                  </button>
+                  <button onClick={() => { const p = location.pathname.startsWith('/admin') ? 'admin' : 'reception'; navigate(`/${p}/teachers/${selectedTeacher.id}?tab=students`); }}
+                    className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     <GraduationCap size={16} className="text-secondary mx-auto mb-1" />
                     <div className="font-bold text-secondary text-lg">{selectedTeacher._count?.students || 0}</div>
                     <div className="text-xs text-gray-400">O'quvchi</div>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center">
+                  </button>
+                  <button onClick={() => { const p = location.pathname.startsWith('/admin') ? 'admin' : 'reception'; navigate(`/${p}/teachers/${selectedTeacher.id}?tab=lessons`); }}
+                    className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-3 text-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     <BookOpen size={16} className="text-amber-500 mx-auto mb-1" />
                     <div className="font-bold text-amber-600 text-lg">{selectedTeacher._count?.lessons || 0}</div>
                     <div className="text-xs text-gray-400">Dars</div>
-                  </div>
+                  </button>
                 </div>
               </div>
 

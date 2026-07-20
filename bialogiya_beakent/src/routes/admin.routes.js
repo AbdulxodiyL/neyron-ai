@@ -4,7 +4,7 @@ const { verifyToken, requireRole } = require('../middleware/auth.middleware');
 const {
   getStats, getTeachers, createTeacher, updateTeacher, deleteTeacher,
   getStudents, getGroups, toggleUserStatus, getSettings, updateSettings,
-  getReceptionUsers, createReceptionUser, deleteReceptionUser,
+  getReceptionUsers, createReceptionUser, deleteReceptionUser, getTeacherOverview,
 } = require('../controllers/admin.controller');
 
 const adminOnly = [verifyToken, requireRole('admin')];
@@ -16,6 +16,7 @@ const adminOrReception = [verifyToken, requireRole('admin', 'reception')];
 
 router.get('/stats', ...adminOrReception, getStats);
 router.get('/teachers', ...adminOrReception, getTeachers);
+router.get('/teachers/:id/overview', ...adminOrReception, getTeacherOverview);
 router.post('/teachers', ...adminOrReception, createTeacher);
 router.put('/teachers/:id', ...adminOrReception, updateTeacher);
 router.delete('/teachers/:id', ...adminOrReception, deleteTeacher);
