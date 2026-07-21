@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
@@ -56,9 +57,11 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        // Clear the full auth state (zustand's isAuthenticated flag too, not
+        // just the raw tokens) and send them to the landing page - the site
+        // should always open there first, not force straight to /login.
+        useAuthStore.getState().clearAuth();
+        window.location.href = '/';
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
