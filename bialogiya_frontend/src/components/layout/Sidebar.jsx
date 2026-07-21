@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, BookOpen, ClipboardList, FileText, BarChart2,
   Users, FolderOpen, Calendar, Trophy, Star, Settings,
-  GraduationCap, BookMarked, UserCheck, Upload, Mic, Wallet, UserCog, Building2,
+  GraduationCap, BookMarked, UserCheck, Upload, Mic, Wallet, UserCog, Inbox, Building2,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { getLevelProgress } from '../../utils/format';
@@ -39,6 +39,7 @@ const teacherLinks = [
 
 const adminLinks = [
   { to: '/admin/dashboard', icon: LayoutDashboard, key: 'dashboard' },
+  { to: '/admin/applications', icon: Inbox, key: 'applications' },
   { to: '/admin/users', icon: UserCheck, key: 'users' },
   { to: '/admin/teachers', icon: BookMarked, key: 'teachers' },
   { to: '/admin/reception', icon: UserCog, key: 'reception' },

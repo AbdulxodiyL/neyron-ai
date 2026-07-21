@@ -192,6 +192,19 @@ const runMigrations = async () => {
         ADD COLUMN IF NOT EXISTS "room"      TEXT
     `);
 
+    // Public lead-form submissions from the landing page
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "Application" (
+        "id"        TEXT NOT NULL,
+        "name"      TEXT NOT NULL,
+        "phone"     TEXT NOT NULL,
+        "message"   TEXT,
+        "status"    TEXT NOT NULL DEFAULT 'new',
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "Application_pkey" PRIMARY KEY ("id")
+      )
+    `);
+
     console.log('✅ Schema migrations applied');
   } catch (err) {
     console.warn('⚠️  Migration warning (non-fatal):', err.message);

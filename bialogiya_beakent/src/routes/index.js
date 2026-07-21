@@ -15,5 +15,6 @@ router.use('/reception', require('./reception.routes'));
 router.use('/payments', require('./payment.routes'));
 router.use('/speaking', require('./speaking.routes'));
 router.use('/voice', require('./voice.routes'));
+router.use('/applications', require('./application.routes'));
 
 module.exports = router;

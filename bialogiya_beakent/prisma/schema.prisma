@@ -331,3 +331,14 @@ model Payment {
 
   @@unique([studentId, month])
 }
+
+// Public lead/application form submissions from the landing page (people
+// interested in enrolling, submitted without needing a login/CRM account).
+model Application {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  message   String?
+  status    String   @default("new") // new | contacted | converted | rejected
+  createdAt DateTime @default(now())
+}

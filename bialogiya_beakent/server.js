@@ -32,6 +32,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Rate limiters
 const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 500, message: 'Too many requests' });
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: 'Too many login attempts' });
+// Public, unauthenticated form on the landing page - tighter limit than
+// the general API limiter to prevent spam submissions.
+const applicationLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: "Juda ko'p ariza yuborildi, birozdan so'ng qayta urinib ko'ring" });
 // Story audio / explainer video / realtime speaking all call paid AI/TTS APIs,
 // so they get a tighter per-user-IP cap than the general API limiter.
 const aiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60, message: 'Too many AI requests, please slow down' });
@@ -40,6 +43,7 @@ app.use('/api', generalLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/speaking', aiLimiter);
 app.use('/api/voice', aiLimiter);
+app.use('/api/applications', (req, res, next) => (req.method === 'POST' ? applicationLimiter(req, res, next) : next()));
 app.use((req, res, next) => {
   if (req.path.includes('/ai/')) return aiLimiter(req, res, next);
   next();

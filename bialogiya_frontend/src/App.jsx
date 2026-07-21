@@ -5,6 +5,9 @@ import MainLayout from './components/layout/MainLayout';
 // Shared
 import ProfilePage from './pages/shared/ProfilePage';
 
+// Public
+import LandingPage from './pages/public/LandingPage';
+
 // Auth
 import LoginPage from './pages/auth/LoginPage';
 
@@ -45,6 +48,7 @@ import TeacherVoice from './pages/teacher/TeacherVoice';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminTeachers from './pages/admin/AdminTeachers';
 import AdminReception from './pages/admin/AdminReception';
+import AdminApplications from './pages/admin/AdminApplications';
 import AdminStudents from './pages/admin/AdminStudents';
 import AdminGroups from './pages/admin/AdminGroups';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -84,7 +88,7 @@ export default function App() {
           user?.role === 'teacher' ? <Navigate to="/teacher/dashboard" replace /> :
           user?.role === 'reception' ? <Navigate to="/reception/teachers" replace /> :
           user?.role === 'admin' ? <Navigate to="/admin/dashboard" replace /> :
-          <Navigate to="/login" replace />
+          <LandingPage />
         } />
 
         {/* Student Routes */}
@@ -137,6 +141,7 @@ export default function App() {
           <Route path="teachers" element={<AdminTeachers />} />
           <Route path="teachers/:id" element={<ReceptionTeacherDetail />} />
           <Route path="reception" element={<AdminReception />} />
+          <Route path="applications" element={<AdminApplications />} />
           <Route path="students" element={<AdminStudents />} />
           <Route path="groups" element={<AdminGroups />} />
           <Route path="settings" element={<AdminSettings />} />
